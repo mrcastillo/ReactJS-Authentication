@@ -1,0 +1,52 @@
+body {
+  background: #ffe2ad;
+  margin: 0;
+  padding: 0;
+  font-family: "helvetica"; }
+
+a {
+  color: inherit; }
+
+.app-container .navbar {
+  display: flex;
+  flex-flow: row wrap;
+  color: white;
+  background: black; }
+  .app-container .navbar .brand {
+    color: gold;
+    flex-basis: 75%; }
+  .app-container .navbar .nav-options {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    align-items: center;
+    flex: 1;
+    font-size: 24px;
+    font-weight: 600; }
+
+.app-container .homepage .forum {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
+  padding: 0em .5em 0em .5em; }
+  .app-container .homepage .forum table {
+    border: 1px solid black;
+    text-align: center;
+    flex: 1; }
+    .app-container .homepage .forum table thead {
+      font-weight: 600; }
+      .app-container .homepage .forum table thead tr {
+        border-bottom: 1px solid black; }
+
+.app-container .login {
+  text-align: center; }
+  .app-container .login div form label {
+    display: block; }
+  .app-container .login div form input {
+    margin: 1em 0em 1em 0em; }
+
+.app-container .signup {
+  text-align: center; }
+
+.app-container .form-errors {
+  color: red; }
