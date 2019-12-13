@@ -8,7 +8,10 @@ axios.defaults.withCredentials = true;
 export const SessionContext = createContext();
 
 const SessionContextProvider = (props) => {
-    const [session, dispatch] = useReducer(sessionReducer, {});
+    const [session, dispatch] = useReducer(sessionReducer, {
+        apiRequestCompleted: false,
+        user: ""
+    });
 
     useEffect(() => {
         sessionStatus(dispatch);

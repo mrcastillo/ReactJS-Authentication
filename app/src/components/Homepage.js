@@ -10,6 +10,7 @@ const Homepage = () => {
                 <li>Read Forum Rules</li>
                 <li>Sticky Annoucement</li>
                 <li><Link to={"/account"}>Account</Link></li>
+                <li><Link to={"/test"}>Fake Login</Link></li>
             </ul>
 
             <div className={"forum"}>

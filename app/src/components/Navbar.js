@@ -8,7 +8,8 @@ const Navbar = () => {
 
     useEffect(() => {
             console.log("navbar loaded with sesson!", session);
-    }, [session]);
+    }, []);
+    
 
     const LoggedInLinks = () => {
         return(

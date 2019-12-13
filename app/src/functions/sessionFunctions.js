@@ -28,6 +28,7 @@ export const sessionDestroy = async (dispatch) => {
     });
 }
 
+
 export const fakeSession = async (dispatch) => {
     const fakeSession = await axios("http://localhost:8080/forum/fakelogin");
 

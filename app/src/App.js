@@ -24,15 +24,21 @@ class App extends Component {
                 
                 <Switch>
                   <Route path={"/login"}>
-                    <Login />
+                    <AuthRedirect hideOnLogin={true}>
+                      <Login />
+                    </AuthRedirect>
                   </Route>
 
                   <Route path={"/logout"}>
-                    <Logout />
+                    <AuthRedirect>
+                      <Logout />
+                    </AuthRedirect>
                   </Route>
 
                   <Route path={"/signup"}>
-                    <Signup />
+                    <AuthRedirect hideOnLogin={true}>
+                      <Signup />
+                    </AuthRedirect>
                   </Route>
   
                   <Route path={"/account"}>

@@ -1,5 +1,6 @@
 import React, { useState, useContext} from "react";
 import { Link, useHistory } from "react-router-dom";
+import { sessionSet } from "../functions/sessionFunctions";
 import { SessionContext } from "../context/SessionContext";
 import { isEmail } from "../validators/Validator";
 import _ from "lodash";
@@ -30,7 +31,29 @@ const Login = () => {
 
         const emailValidation = isEmail(email);
 
-        if(!emailValidation.validated) {
+        if(emailValidation.validated) {
+            console.log("input validated!");
+            axios.post("http://localhost:8080/forum/login", {
+                email, password
+            })
+            .then((loginReplyAxios) => {
+                const loginReply = loginReplyAxios.data;
+                dispatch({
+                    type: "SESSION_SET",
+                    loginSession: loginReply
+                });
+                //history.push("/")
+            })
+            .catch((error) => {
+                console.log("there was an error")
+                console.log(error);
+                setFormErrors({
+                    errors: true,
+                    messages: ["There was an error logging in."]
+                })
+            })
+        }
+        else {
             const allErrors = [...emailValidation.errors];
 
             setFormErrors({
@@ -38,37 +61,10 @@ const Login = () => {
                 messages: allErrors
             });
 
-            console.log("Logged Into Account!");
+            console.log("There were errors!");
 
             setEmail("");
             setPassword("");
-        } else {
-            console.log("Logged Into Account!");
-            axios.post("http://localhost:8080/forum/login", {
-                email,
-                password
-            })
-            .then((userSession) => {
-                userSession = userSession.data;
-                console.log(userSession);
-                if(userSession.user.length > 0) {
-                    setEmail("");
-                    setPassword("");
-                    dispatch({
-                        type: "SESSION_SET",
-                        action: userSession
-                    });
-                    history.push("/profile")
-                }
-                
-            })
-            .catch((err) => {
-                console.error(err);
-                setEmail("");
-                setPassword("");
-            });
-
-            
         };
     }
 
@@ -95,7 +91,7 @@ const Login = () => {
             </div>
         );
     };
-
+    
     return ( 
         <div className={"login"}>
             <h1>Login to your account.</h1>
@@ -103,16 +99,16 @@ const Login = () => {
 
             <FormErrorsElement />
             <div>
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} method={"POST"}>
                     <label>Email/Username</label>
-                    <input type={"text"} value={email} onChange={handleEmailInput}/>
+                    <input type={"text"} name={"email"} value={email} onChange={handleEmailInput}/>
 
                     <label>Password</label>
-                    <input type={"text"} value={password} onChange={handlePasswordInput}/>
+                    <input type={"text"} name={"password"} value={password} onChange={handlePasswordInput}/>
                     
                     <br/>
 
-                    <input type={"submit"} value={"Login"}/>
+                    <input type={"submit"} value={"Login"} />
                 </form>
             </div>
         </div>
