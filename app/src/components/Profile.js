@@ -1,24 +1,28 @@
-import React from "react";
+import React, { useContext } from "react";
+import AuthRedirect from '../components/AuthRedirect';
+import { Switch, Route, useRouteMatch } from "react-router-dom";
+import ChangePasswordForm from "./ChangePasswordForm";
+
+import Account from "./Account";
 
 const Profile = () => {
+    const { path, url } = useRouteMatch();
     return ( 
-        <div className={"profile"}>
-            <h1>Account Settings</h1>
-            <p>Change your profile settings here.</p>
-
-            <h3>Username: EyesClosed</h3>
-            <h3>Created: December 10, 2019</h3>
-            <h3>Posts: 11</h3>
-
-            <div>
-                <h1>Change Password</h1>
-                <p>Change Password</p>
-
-                <h1>Delete Account</h1>
-                <p>Delete my Account</p>
-            </div>
+        <div className={"account"}>
+            <Switch>
+                <Route path={`${path}/passwordsettings`}>
+                    <AuthRedirect>
+                        <ChangePasswordForm />
+                    </AuthRedirect>
+                </Route>
+                
+                <Route path={`${path}`}>
+                        <Account />
+                </Route>
+        
+            </Switch>
         </div>
-     );
+    );
 }
  
 export default Profile;

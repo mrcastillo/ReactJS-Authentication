@@ -6,11 +6,11 @@ import { SessionContext }  from "../context/SessionContext";
 
 const AuthRedirect = (props) => {
     const {session, dispatch} = useContext(SessionContext);
-    
-    /*useEffect(() =>  {
+
+    useEffect(() =>  {
         sessionStatus(dispatch);
         console.log("useEffect completed on AuthRedirect", session);
-    }, []);*/
+    }, []);
 
     const renderContent = () => {
         if(props.hideOnLogin) {

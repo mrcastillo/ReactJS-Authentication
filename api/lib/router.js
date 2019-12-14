@@ -152,6 +152,99 @@ function () {
           res.end();
         }
       });
+      app.post("/forum/account/changepassword", function (req, res) {
+        var userSubmittedData = req.body;
+        console.log(req.session.user); //Update the user's password
+        //First check if the password is the same password in the database.
+
+        db.models.user.findOne({
+          where: {
+            email: req.session.user
+          }
+        }).then(function (queryResult) {
+          if (queryResult === null) {
+            console.log("Test2");
+            res.status(500).send({
+              apiRequestCompleted: true,
+              user: ""
+            });
+          } else {
+            var userPassword = queryResult.dataValues.password;
+
+            _bcryptjs["default"].compare(userSubmittedData.password, userPassword, function (err, passwordsMatch) {
+              if (err) {
+                console.error("There was an error with the compare function");
+                res.send({
+                  errors: ["There was an error with the compare function."]
+                });
+                res.end();
+              } else {
+                if (passwordsMatch) {
+                  _bcryptjs["default"].genSalt(10, function (err, salt) {
+                    if (err) {
+                      console.error(err);
+                    }
+
+                    ;
+
+                    _bcryptjs["default"].hash(userSubmittedData.newPassword, salt, function (err, hash) {
+                      db.models.user.update({
+                        password: hash
+                      }, {
+                        where: {
+                          email: req.session.user
+                        }
+                      }).then(function (queryResult) {
+                        console.log(queryResult[0]);
+
+                        if (queryResult) {
+                          console.log("yes");
+                          res.send({
+                            message: "Completed...",
+                            status: true
+                          });
+                          res.end();
+                        } else {
+                          console.log("no");
+                          res.send({
+                            message: "Completed...",
+                            status: false
+                          });
+                          res.end();
+                        }
+                      });
+                    });
+                  });
+                } else {
+                  console.log("Passwords dont match");
+                  res.send({
+                    errors: ["Current Password is invalid."]
+                  });
+                  res.end();
+                }
+              }
+            });
+          }
+        })["catch"](function (err) {
+          console.error(err);
+        });
+        /*
+        db.models.user.update({
+            password: userSubmittedData.newPassword
+        }, 
+        {
+            where: {
+                email: req.session.email
+            }
+        })
+        .then((updateQueryResult) => {
+            console.log(updateQueryResult);
+        })
+        .catch((err) => {
+            console.error(err);
+          })
+        */
+      });
     }
   }]);
   return AppRouter;

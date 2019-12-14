@@ -84,4 +84,18 @@ a {
     .form-errors {
         color:red;
     }
+
+    .account {
+
+        .change-password {
+            text-align: center;
+
+            .password-settings-form {
+
+                label {
+                    display: block;
+                }
+            }
+        }
+    }
 }

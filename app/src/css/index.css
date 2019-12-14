@@ -50,3 +50,8 @@ a {
 
 .app-container .form-errors {
   color: red; }
+
+.app-container .account .change-password {
+  text-align: center; }
+  .app-container .account .change-password .password-settings-form label {
+    display: block; }
