@@ -33,23 +33,32 @@ const Login = () => {
 
         if(emailValidation.validated) {
             console.log("input validated!");
+
             axios.post("http://localhost:8080/forum/login", {
                 email, password
             })
             .then((loginReplyAxios) => {
                 const loginReply = loginReplyAxios.data;
-                dispatch({
-                    type: "SESSION_SET",
-                    loginSession: loginReply
-                });
-                //history.push("/")
+
+                //Check if server returned 
+                if(loginReply.errors) {
+                    setFormErrors({
+                        errors: true,
+                        messages: loginReply.errors
+                    });
+                }
+                else {
+                    dispatch({
+                        type: "SESSION_SET",
+                        loginSession: loginReply
+                    });
+                };
             })
             .catch((error) => {
-                console.log("there was an error")
-                console.log(error);
+                console.log(error)
                 setFormErrors({
                     errors: true,
-                    messages: ["There was an error logging in."]
+                    messages: ["There was an internal server error. Please try again later."]
                 })
             })
         }

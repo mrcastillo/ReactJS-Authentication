@@ -2,9 +2,9 @@
 export const sessionReducer = (state, action) => {
     switch(action.type) {
         case "SESSION_SET": 
-            const loginSession = action.loginSession;
-            console.log(loginSession)
-            return loginSession;
+            const user = action.loginSession.user;
+            const newState = {...state, user}
+            return newState;
 
         case "SESSION_STATE":
             const sessionStatus = action.serverSession.data;

@@ -55,3 +55,15 @@ a {
   text-align: center; }
   .app-container .account .change-password .password-settings-form label {
     display: block; }
+
+.app-container .account .remove-account {
+  text-align: center; }
+  .app-container .account .remove-account .remove-account-form {
+    display: flex;
+    flex-flow: column;
+    align-items: center; }
+    .app-container .account .remove-account .remove-account-form form {
+      display: flex;
+      flex-flow: column;
+      justify-content: center;
+      align-items: center; }

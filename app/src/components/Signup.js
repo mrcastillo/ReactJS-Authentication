@@ -48,7 +48,6 @@ const Signup = () => {
                 errors: true,
                 messages: allErrors
             });
-
             setEmail("");
             setPassword("");
             setConfirmedPassword("");
@@ -70,23 +69,26 @@ const Signup = () => {
                         email,
                         password: hash
                     })
-                    .then((result) => {
-                        if(result.data) {
-                            SuccessfulSignUp();
-                            return;
-                        }
-                        else {
+                    .then((signupResult) => {
+                        signupResult = signupResult.data;
+                        if(signupResult.errors) {
                             setFormErrors({
                                 errors: true,
-                                messages: ["There was a signup error."]
+                                messages: signupResult.errors
                             });
                             setEmail("");
                             setPassword("");
                             setConfirmedPassword("");
-                            return;
+                        }
+                        else {
+                            history.push("/");
                         }
                     })
                     .catch((err) => {
+                        setFormErrors({
+                            errors: true,
+                            messages: ["There was an internal server error."]
+                        });
                         setEmail("");
                         setPassword("");
                         setConfirmedPassword("");

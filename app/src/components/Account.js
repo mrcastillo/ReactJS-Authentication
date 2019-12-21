@@ -8,7 +8,7 @@ const Account = () => {
     const { session, dispatch } = useContext(SessionContext);
 
     return ( 
-        <div className={"account"}>
+        <div>
             <h1>Account Settings</h1>
             <p>Change your profile settings here.</p>
             <hr/>
@@ -21,7 +21,7 @@ const Account = () => {
                 <h1>Change Password</h1>
                 <Link to={`${path}/passwordsettings`}>Change Password</Link>
                 <h1>Delete Account</h1>
-                <p>Delete my Account</p>
+                <Link to={`${path}/deleteaccount`}>Delete my Account</Link>
             </div>
         </div>
      );

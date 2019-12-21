@@ -52,7 +52,6 @@ const redisClient = redis.createClient({
 
 const redisStore = new RedisStore({ 
     client: redisClient,
-    ttl: 5
 });
 
 

@@ -9,8 +9,8 @@ axios.defaults.withCredentials = true;
 const ChangePasswordForm = () => {
     const history = useHistory();
     const [password, setPassword] = useState("");
-    const [newPassword, setnewPassword] = useState("");
-    const [confirmNewPassword, setconfirmNewPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmNewPassword, setConfirmNewPassword] = useState("");
     
     const [formErrors, setFormErrors] = useState({
         errors: false,
@@ -22,11 +22,11 @@ const ChangePasswordForm = () => {
     }
 
     const handleNewPasswordInput = (e) => {
-        setnewPassword(e.target.value);
+        setNewPassword(e.target.value);
     }
 
     const handleConfirmNewPasswordInput = (e) => {
-        setconfirmNewPassword(e.target.value);
+        setConfirmNewPassword(e.target.value);
     }
 
     const handlePasswordSubmittion = (e)  =>  {
@@ -37,25 +37,19 @@ const ChangePasswordForm = () => {
         const confirmNewPasswordLengthValidation = validPassword(confirmNewPassword);
         const confirmNewPasswordValidation = confirmPassword(newPassword, confirmNewPassword);
         
-
+        //
         if(!passwordValidation.validated || !newPasswordValidation.validated || !confirmNewPasswordValidation.validated || !confirmNewPasswordLengthValidation.validated){
-
-            //newPasswordValidation.errors = ["New Password must be between 8 to 64 characters."];
-            //confirmNewPasswordLengthValidation.errors = "";
 
             const allErrors = [
                 ...passwordValidation.errors,
                 ...newPasswordValidation.errors,
                 ...confirmNewPasswordValidation.errors
-            ]
+            ];
 
             setFormErrors({
                 errors: true,
                 messages: allErrors
-            });
-            setPassword("")
-            setnewPassword("")
-            setconfirmNewPassword("")
+            })
         }
         else {
             console.log("Validated!");
@@ -65,14 +59,20 @@ const ChangePasswordForm = () => {
             })
             .then((serverReply) => {
                 serverReply = serverReply.data;
-                if(serverReply.status) {
+
+                if(serverReply.serverReplied) {
+                    console.log(serverReply.serverReplied)
                     history.push(`/account`);
                 }
                 else {
                     setFormErrors({
                         errors: true,
-                        messages: ["There was an error changing the password.", serverReply.errors]
+                        messages: [serverReply.errors]
                     });
+
+                    setPassword("");
+                    setNewPassword("");
+                    setConfirmNewPassword("");
                 }
             })
             .catch((err) => {

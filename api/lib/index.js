@@ -66,8 +66,7 @@ var redisClient = _redis["default"].createClient({
 });
 
 var redisStore = new RedisStore({
-  client: redisClient,
-  ttl: 5
+  client: redisClient
 });
 app.use((0, _expressSession["default"])({
   store: redisStore,

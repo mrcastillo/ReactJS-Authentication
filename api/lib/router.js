@@ -13,6 +13,8 @@ var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/creat
 
 var _bcryptjs = _interopRequireDefault(require("bcryptjs"));
 
+;
+
 var AppRouter =
 /*#__PURE__*/
 function () {
@@ -32,7 +34,7 @@ function () {
 
       app.get("/forum/session", function (req, res) {
         var userSession = {
-          apiRequestCompleted: true,
+          serverReplied: true,
           user: req.session.user ? req.session.user : ""
         };
 
@@ -48,7 +50,7 @@ function () {
         req.session.user = "Anthony";
         console.log(req.session.user);
         res.send({
-          apiRequestCompleted: true,
+          serverReplied: true,
           user: req.session.user
         });
         res.end();
@@ -56,28 +58,34 @@ function () {
       app.post("/forum/login", function (req, res) {
         //Return variable from our POST data for our user data.
         var userSubmittedPOSTData = req.body;
-        console.log("Test1"); //Query the DB using the "User" model to find one entry in the table where user submitted email matches it in the database.
+        var userSubmittedEmail = req.body.email;
+        var userSubmittedPassword = req.body.password; //Query the DB using the "User" model to find one entry in the table where user submitted email matches it in the database.
 
         db.models.user.findOne({
           where: {
-            email: userSubmittedPOSTData.email
+            email: userSubmittedEmail
           }
         }).then(function (findUserQueryResult) {
-          //If we did not find a result from our query send back an error.
+          //Store DB PAssword
+          var dbPassword = findUserQueryResult.dataValues.password; //If we did not find a result from our query send back an error.
+
           if (findUserQueryResult === null) {
-            console.log("Test2");
-            res.status(500).send({
-              apiRequestCompleted: true,
-              user: ""
+            //Send back error to client that user was not found
+            res.send({
+              serverReplied: true,
+              user: "",
+              errors: ["Please check your email and password."]
             });
             res.end();
           } else {
             //Compare the user password to the hash in the DB
-            _bcryptjs["default"].compare(userSubmittedPOSTData.password, findUserQueryResult.dataValues.password, function (err, bcryptHashIsMatching) {
+            _bcryptjs["default"].compare(userSubmittedPassword, dbPassword, function (err, bcryptHashIsMatching) {
               //Error if bcrypt compare didnt work for whatever reason.
               if (err) {
                 console.error("There was an error with bcrypt compare function.", err);
-                res.status(500).send();
+                res.status({
+                  errors: ["There wasn an internal server error."]
+                });
                 res.end();
               } //Execute if we find a valid hash (Passwords Match);
 
@@ -88,21 +96,18 @@ function () {
                 //Returns back an object featuring the user
 
                 res.send({
-                  apiRequestCompleted: true,
                   user: req.session.user
                 });
                 res.end();
               } else {
-                console.error("bcrypt not matching");
-                res.status(500).send({});
+                //User does not match DB password
+                res.send({
+                  errors: ["Invalid Password."]
+                });
                 res.end();
               }
             });
           }
-        })["catch"](function (err) {
-          console.error("There was an error running the find user query.");
-          res.status(500).send();
-          res.end();
         });
       });
       app.post("/forum/signup", function (req, res) {
@@ -115,14 +120,27 @@ function () {
           res.send(true);
           res.end();
         })["catch"](function (err) {
-          console.error("There was an error creating the user.\n", err);
-          res.send(false);
+          var errorCode = err.parent.errno;
+          var errorMsg = [];
+
+          switch (errorCode) {
+            case 1062:
+              errorMsg.push("Email already in use. Please use another email adress.");
+              break;
+
+            default:
+              errorMsg.push("There was an internal server error.");
+          }
+
+          res.send({
+            errors: errorMsg
+          });
           res.end();
         });
       });
       app.get("/forum/logout", function (req, res) {
         var destroyedSession = {
-          apiRequestCompleted: true,
+          serverReplied: true,
           user: ""
         };
 
@@ -153,25 +171,26 @@ function () {
         }
       });
       app.post("/forum/account/changepassword", function (req, res) {
-        var userSubmittedData = req.body;
-        console.log(req.session.user); //Update the user's password
-        //First check if the password is the same password in the database.
+        var userSubmittedPassword = req.body.password;
+        var userSubbmitedNewPassword = req.body.newPassword; //Search for the user inside the database, so that we can check on the user stored password
 
         db.models.user.findOne({
           where: {
             email: req.session.user
           }
         }).then(function (queryResult) {
+          //If no user by req.session.user then logout, wont happen since we are logged in from the req.session.user
           if (queryResult === null) {
-            console.log("Test2");
+            console.log("NO USER IN DB AFTER CHANGE PASSWORD REQUEST");
             res.status(500).send({
-              apiRequestCompleted: true,
-              user: ""
+              errors: ["User is not logged in or does not exist."]
             });
           } else {
-            var userPassword = queryResult.dataValues.password;
+            //Copy the password from the database
+            var userPassword = queryResult.dataValues.password; //Compare the user submitted passord to the hash inside the DB(our user password)
 
-            _bcryptjs["default"].compare(userSubmittedData.password, userPassword, function (err, passwordsMatch) {
+            _bcryptjs["default"].compare(userSubmittedPassword, userPassword, function (err, passwordsMatch) {
+              //There was an error with the compare function
               if (err) {
                 console.error("There was an error with the compare function");
                 res.send({
@@ -179,15 +198,26 @@ function () {
                 });
                 res.end();
               } else {
+                //Checks the boolean result of bcrypt.compare
+                //If the passwords match, we hash the new password submitted by the user.
                 if (passwordsMatch) {
+                  //Salt Password
                   _bcryptjs["default"].genSalt(10, function (err, salt) {
                     if (err) {
                       console.error(err);
+                      return;
                     }
 
-                    ;
+                    ; //Hash user submitted new  password with salt
 
-                    _bcryptjs["default"].hash(userSubmittedData.newPassword, salt, function (err, hash) {
+                    _bcryptjs["default"].hash(userSubbmitedNewPassword, salt, function (err, hash) {
+                      if (err) {
+                        console.error(err);
+                        return;
+                      }
+
+                      ; //Update model password where email matches req.session.user(that we get from login) to contain the newl hashed password
+
                       db.models.user.update({
                         password: hash
                       }, {
@@ -195,30 +225,34 @@ function () {
                           email: req.session.user
                         }
                       }).then(function (queryResult) {
-                        console.log(queryResult[0]);
+                        //Checks the query result
+                        //Query result returns an array with a number
+                        var didUserUpdate = queryResult[0];
 
-                        if (queryResult) {
-                          console.log("yes");
+                        if (didUserUpdate) {
                           res.send({
-                            message: "Completed...",
-                            status: true
+                            serverReplied: true
                           });
                           res.end();
                         } else {
-                          console.log("no");
                           res.send({
-                            message: "Completed...",
-                            status: false
+                            errors: ["There was an internal server error"]
                           });
                           res.end();
                         }
+                      })["catch"](function (err) {
+                        res.send({
+                          errors: ["There was an internal server error"]
+                        });
+                        res.end();
                       });
                     });
                   });
                 } else {
                   console.log("Passwords dont match");
                   res.send({
-                    errors: ["Current Password is invalid."]
+                    errors: ["Current Password is invalid."],
+                    status: false
                   });
                   res.end();
                 }
@@ -227,22 +261,104 @@ function () {
           }
         })["catch"](function (err) {
           console.error(err);
+          res.send({
+            errors: ["There was an error with the findone query"],
+            status: false
+          });
+          res.end();
+        });
+      });
+      app.post("/forum/account/delete", function (req, res) {
+        //const user = req.session.user;
+        var user = req.session.user;
+        var userSubmittedPasssword = req.body.password;
+        db.models.user.findOne({
+          where: {
+            email: user
+          }
+        }).then(function (queryResult) {
+          if (queryResult) {
+            var userPassword = queryResult.dataValues.password;
+
+            _bcryptjs["default"].compare(userSubmittedPasssword, userPassword, function (err, passwordsMatch) {
+              if (err) {
+                throw err;
+              }
+
+              if (passwordsMatch) {
+                store.destroy(req.sessionID, function (err) {
+                  if (err) {
+                    console.error("Unable to destroy redis session\n", err);
+                    res.send({
+                      errors: true,
+                      messages: ["Unable to destroy redis session"]
+                    });
+                    res.end();
+                  }
+
+                  ;
+                  req.session.destroy(function (err) {
+                    if (err) {
+                      console.error("Unable to destroy express session.\n", err);
+                      res.send({
+                        errors: true,
+                        messages: ["Unable to destroy express session"]
+                      });
+                      res.end();
+                    }
+
+                    db.models.user.destroy({
+                      where: {
+                        email: user
+                      },
+                      limit: 1
+                    }).then(function (userDestroyed) {
+                      if (userDestroyed > 0) {
+                        res.send({
+                          errors: false,
+                          messages: ["We have removed the user!"]
+                        }).res.end();
+                      } else {
+                        res.send({
+                          errors: true,
+                          messages: ["We have not removed any user.."]
+                        });
+                        res.end();
+                      }
+                    })["catch"](function (err) {
+                      throw err;
+                      res.send("there was an error");
+                      res.end();
+                    });
+                  });
+                });
+              } else {
+                res.send({
+                  errors: true,
+                  messages: ["Passwords didnt match"]
+                });
+                res.end();
+              }
+            });
+          } else {
+            //USER NOT FOUND
+            console.error("THERE IS NO USER RETURNED");
+          }
+        })["catch"](function (err) {
+          //ERROR ON FINDONE QUERY
+          console.error(err);
         });
         /*
-        db.models.user.update({
-            password: userSubmittedData.newPassword
-        }, 
-        {
-            where: {
-                email: req.session.email
+            
+            if(user) {
+              }
+            else {
+                res.send({
+                    errors: [""],
+                    status: false
+                });
+                res.end();
             }
-        })
-        .then((updateQueryResult) => {
-            console.log(updateQueryResult);
-        })
-        .catch((err) => {
-            console.error(err);
-          })
         */
       });
     }

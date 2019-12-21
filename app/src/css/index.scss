@@ -97,5 +97,23 @@ a {
                 }
             }
         }
+
+        .remove-account {
+            text-align: center;
+
+            .remove-account-form {
+                display: flex;
+                flex-flow: column;
+                align-items: center;
+
+                form {
+                    display: flex;
+                    flex-flow: column;
+                    justify-content: center;
+                    align-items: center;
+                }
+
+            }
+        }
     }
 }
