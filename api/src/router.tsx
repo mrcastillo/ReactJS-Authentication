@@ -1,5 +1,6 @@
 import _ from "lodash";
 import bcrypt from "bcryptjs";
+import { Model } from "sequelize/lib/sequelize";
 
 
 interface sessionInterface {
@@ -37,16 +38,6 @@ class AppRouter {
             }
         });
 
-        app.get("/forum/fakelogin", (req, res) => {
-            req.session.user = "Anthony";
-            console.log(req.session.user)
-            res.send({
-                serverReplied: true,
-                user: req.session.user
-            });
-            res.end();
-        });
-
         app.post("/forum/login", (req, res) => {
             //Return variable from our POST data for our user data.
             const userSubmittedPOSTData = req.body;
@@ -60,9 +51,6 @@ class AppRouter {
                 }
             })
             .then((findUserQueryResult) => {
-
-                //Store DB PAssword
-                const dbPassword = findUserQueryResult.dataValues.password
                 //If we did not find a result from our query send back an error.
                 if(findUserQueryResult === null) {
                     //Send back error to client that user was not found
@@ -75,6 +63,9 @@ class AppRouter {
                     res.end();
                 }
                 else {
+                    //Store DB PAssword
+                    const dbPassword = findUserQueryResult.dataValues.password
+
                     //Compare the user password to the hash in the DB
                     bcrypt.compare(userSubmittedPassword, dbPassword, (err, bcryptHashIsMatching) => {
                         //Error if bcrypt compare didnt work for whatever reason.
@@ -89,7 +80,7 @@ class AppRouter {
                         if(bcryptHashIsMatching) {
                             //SETS THE SESSION, SESSION IS SET HERE
                             req.session.user = findUserQueryResult.dataValues.email;
-                            
+                            req.session.userId = findUserQueryResult.dataValues.id;
                             //Login Response
                             //Returns back an object featuring the user
                             res.send({
@@ -112,7 +103,8 @@ class AppRouter {
             const userPostedData =  req.body;
             db.models.user.create({
                 email: userPostedData.email,
-                password: userPostedData.password
+                password: userPostedData.password,
+                role: 1
             })
             .then(() => {
                 console.log("User Created!");
@@ -354,25 +346,82 @@ class AppRouter {
             }
         })
         .catch((err) => {
-            //ERROR ON FINDONE QUERY
-            console.error(err);
-        })
-        /*
-            
-            if(user) {
+                //ERROR ON FINDONE QUERY
+                console.error(err);
+            })
+        });
 
-            }
-            else {
-                res.send({
-                    errors: [""],
-                    status: false
-                });
+        app.get("/forum", (req, res) => {
+            db.models.forumSubjects.findAll()
+            .then((queryResult) => {
+                if(queryResult.length > 0){
+                    res.send(queryResult);
+                    res.end();
+                }
+                else {
+                    res.send(queryResult);
+                    res.end();
+                }
+            })
+            .catch((err) => {
+                res.send(err);
                 res.end();
-            }
-        */
+            });            
+        });
+
+        app.get("/forum/:subjectId", (req, res) => {
+            var id = req.params.subjectId;
+
+            db.models.forumThreads.findAll({
+                where: {
+                    forumSubjectId: id
+                },
+                include: [{
+                    model: db.models.user,
+                    attributes: {
+                        exclude: ["id", "password", "role", "createdAt", "updatedAt"]
+                    }
+                }]
+            })
+            .then((threads) => {
+                console.log(threads);
+                res.send(threads);
+                res.end();
+            })
+            .catch((error) => {
+                console.error(error);
+                res.end();
+            })
+        });
+
+        app.get("/forum/:subjectId/:threadId", (req, res) => {
+            const threadId = req.params.threadId;
+
+            db.models.forumPosts.findAll({
+                where: {
+                    forumThreadId: threadId
+                },
+                include: [{
+                    model: db.models.user,
+                    attributes: {
+                        exclude: ["id", "password", "role", "createdAt", "updatedAt"]
+                    }
+                }]
+            })
+            .then((posts) => {
+                console.log(posts);
+                res.send(posts);
+                res.end();
+            })
+            .catch((error) => {
+                console.error(error);
+                res.end();
+            })
         });
     }
 }
 
 
 export default AppRouter;
+
+//67433264

@@ -16,6 +16,62 @@ const sequelize = new Sequelize(
     }
 });
 
+const ForumSubjects = sequelize.define("forumSubjects", {
+    subject: {
+        type: new DataTypes.STRING(128),
+        allowNull: false,
+        unique: true
+    },
+    description: {
+        type: new DataTypes.STRING(128),
+        allowNull: true,
+        unique: false
+    },
+    createdAt: {
+        type: new DataTypes.DATE
+    },
+    updatedAt: {
+        type:  new DataTypes.DATE
+    }
+}, {
+    sequelize,
+    tableName: "forumSubjects"
+});
+
+const ForumThreads = sequelize.define("forumThreads", {
+    postSubject: {
+        type: new DataTypes.STRING
+    },
+    createdAt: {
+        type: new DataTypes.DATE
+    },
+    updatedAt: {
+        type:  new DataTypes.DATE
+    }
+}, {
+    sequelize,
+    tableName: "forumThreads"
+});
+
+const ForumPosts = sequelize.define("forumPosts", {
+    postComment: {
+        type: new DataTypes.STRING
+    },
+    status: {
+        type: new DataTypes.ENUM,
+        values: ["approved", "pending", "declined"],
+    },
+    createdAt: {
+        type: new DataTypes.DATE
+    },
+    updatedAt: {
+        type:  new DataTypes.DATE
+    }
+}, {
+    sequelize,
+    tableName: "forumPosts"
+});
+
 const User = sequelize.define("user", {
     id: {
         type: new DataTypes.INTEGER,
@@ -43,6 +99,11 @@ const User = sequelize.define("user", {
             len: [8, 64]
         }
     },
+    role: {
+        type: new DataTypes.ENUM,
+        values: ["user", "admin", "banned"],
+        allowNull: false
+    },
     createdAt: {
         type: new DataTypes.DATE
     },
@@ -56,10 +117,16 @@ const User = sequelize.define("user", {
         actions_unique: {
             fields: ["email"]
         }
-        
     }
 });
 
+User.hasMany(ForumThreads);
+ForumThreads.belongsTo(User);
+
+ForumSubjects.hasOne(ForumThreads);
+
+ForumThreads.hasMany(ForumPosts);
+ForumPosts.belongsTo(User);
 //Syncs all models
 sequelize.sync()
 

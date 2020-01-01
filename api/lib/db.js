@@ -21,6 +21,59 @@ var sequelize = new _sequelize.Sequelize("playground", //database
     idle: 10000
   }
 });
+var ForumSubjects = sequelize.define("forumSubjects", {
+  subject: {
+    type: new _sequelize.DataTypes.STRING(128),
+    allowNull: false,
+    unique: true
+  },
+  description: {
+    type: new _sequelize.DataTypes.STRING(128),
+    allowNull: true,
+    unique: false
+  },
+  createdAt: {
+    type: new _sequelize.DataTypes.DATE()
+  },
+  updatedAt: {
+    type: new _sequelize.DataTypes.DATE()
+  }
+}, {
+  sequelize: sequelize,
+  tableName: "forumSubjects"
+});
+var ForumThreads = sequelize.define("forumThreads", {
+  postSubject: {
+    type: new _sequelize.DataTypes.STRING()
+  },
+  createdAt: {
+    type: new _sequelize.DataTypes.DATE()
+  },
+  updatedAt: {
+    type: new _sequelize.DataTypes.DATE()
+  }
+}, {
+  sequelize: sequelize,
+  tableName: "forumThreads"
+});
+var ForumPosts = sequelize.define("forumPosts", {
+  postComment: {
+    type: new _sequelize.DataTypes.STRING()
+  },
+  status: {
+    type: new _sequelize.DataTypes.ENUM(),
+    values: ["approved", "pending", "declined"]
+  },
+  createdAt: {
+    type: new _sequelize.DataTypes.DATE()
+  },
+  updatedAt: {
+    type: new _sequelize.DataTypes.DATE()
+  }
+}, {
+  sequelize: sequelize,
+  tableName: "forumPosts"
+});
 var User = sequelize.define("user", {
   id: {
     type: new _sequelize.DataTypes.INTEGER(),
@@ -48,6 +101,11 @@ var User = sequelize.define("user", {
       len: [8, 64]
     }
   },
+  role: {
+    type: new _sequelize.DataTypes.ENUM(),
+    values: ["user", "admin", "banned"],
+    allowNull: false
+  },
   createdAt: {
     type: new _sequelize.DataTypes.DATE()
   },
@@ -62,7 +120,12 @@ var User = sequelize.define("user", {
       fields: ["email"]
     }
   }
-}); //Syncs all models
+});
+User.hasMany(ForumThreads);
+ForumThreads.belongsTo(User);
+ForumSubjects.hasOne(ForumThreads);
+ForumThreads.hasMany(ForumPosts);
+ForumPosts.belongsTo(User); //Syncs all models
 
 sequelize.sync();
 

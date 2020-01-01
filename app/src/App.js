@@ -6,10 +6,10 @@ import Navbar from "./components/Navbar";
 import Homepage from "./components/Homepage";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
-import TestLogin from "./components/TestLogin";
 import AuthRedirect from './components/AuthRedirect';
 import Profile from "./components/Profile";
 import Logout from "./components/Logout";
+import Forum from "./components/Forum";
 //Providers
 
 
@@ -48,14 +48,8 @@ class App extends Component {
                       
                   </Route>
 
-                  <Route path={"/test"}>
-                      <TestLogin />
-                  </Route>
-
-                  <Route path={"/"}>
-                    <Homepage />
-                  </Route>
-
+                  <Route path={"/forum"} component={Forum} />
+                  <Route path={"/"} component={Homepage} />
                 </Switch>
                 
             </Router>

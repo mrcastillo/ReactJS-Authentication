@@ -46,15 +46,6 @@ function () {
           res.end();
         }
       });
-      app.get("/forum/fakelogin", function (req, res) {
-        req.session.user = "Anthony";
-        console.log(req.session.user);
-        res.send({
-          serverReplied: true,
-          user: req.session.user
-        });
-        res.end();
-      });
       app.post("/forum/login", function (req, res) {
         //Return variable from our POST data for our user data.
         var userSubmittedPOSTData = req.body;
@@ -66,9 +57,7 @@ function () {
             email: userSubmittedEmail
           }
         }).then(function (findUserQueryResult) {
-          //Store DB PAssword
-          var dbPassword = findUserQueryResult.dataValues.password; //If we did not find a result from our query send back an error.
-
+          //If we did not find a result from our query send back an error.
           if (findUserQueryResult === null) {
             //Send back error to client that user was not found
             res.send({
@@ -78,7 +67,9 @@ function () {
             });
             res.end();
           } else {
-            //Compare the user password to the hash in the DB
+            //Store DB PAssword
+            var dbPassword = findUserQueryResult.dataValues.password; //Compare the user password to the hash in the DB
+
             _bcryptjs["default"].compare(userSubmittedPassword, dbPassword, function (err, bcryptHashIsMatching) {
               //Error if bcrypt compare didnt work for whatever reason.
               if (err) {
@@ -92,7 +83,8 @@ function () {
 
               if (bcryptHashIsMatching) {
                 //SETS THE SESSION, SESSION IS SET HERE
-                req.session.user = findUserQueryResult.dataValues.email; //Login Response
+                req.session.user = findUserQueryResult.dataValues.email;
+                req.session.userId = findUserQueryResult.dataValues.id; //Login Response
                 //Returns back an object featuring the user
 
                 res.send({
@@ -114,7 +106,8 @@ function () {
         var userPostedData = req.body;
         db.models.user.create({
           email: userPostedData.email,
-          password: userPostedData.password
+          password: userPostedData.password,
+          role: 1
         }).then(function () {
           console.log("User Created!");
           res.send(true);
@@ -348,23 +341,68 @@ function () {
           //ERROR ON FINDONE QUERY
           console.error(err);
         });
-        /*
-            
-            if(user) {
-              }
-            else {
-                res.send({
-                    errors: [""],
-                    status: false
-                });
-                res.end();
+      });
+      app.get("/forum", function (req, res) {
+        db.models.forumSubjects.findAll().then(function (queryResult) {
+          if (queryResult.length > 0) {
+            res.send(queryResult);
+            res.end();
+          } else {
+            res.send(queryResult);
+            res.end();
+          }
+        })["catch"](function (err) {
+          res.send(err);
+          res.end();
+        });
+      });
+      app.get("/forum/:subjectId", function (req, res) {
+        var id = req.params.subjectId;
+        db.models.forumThreads.findAll({
+          where: {
+            forumSubjectId: id
+          },
+          include: [{
+            model: db.models.user,
+            attributes: {
+              exclude: ["id", "password", "role", "createdAt", "updatedAt"]
             }
-        */
+          }]
+        }).then(function (threads) {
+          console.log(threads);
+          res.send(threads);
+          res.end();
+        })["catch"](function (error) {
+          console.error(error);
+          res.end();
+        });
+      });
+      app.get("/forum/:subjectId/:threadId", function (req, res) {
+        var threadId = req.params.threadId;
+        db.models.forumPosts.findAll({
+          where: {
+            forumThreadId: threadId
+          },
+          include: [{
+            model: db.models.user,
+            attributes: {
+              exclude: ["id", "password", "role", "createdAt", "updatedAt"]
+            }
+          }]
+        }).then(function (posts) {
+          console.log(posts);
+          res.send(posts);
+          res.end();
+        })["catch"](function (error) {
+          console.error(error);
+          res.end();
+        });
       });
     }
   }]);
   return AppRouter;
 }();
 
-var _default = AppRouter;
+var _default = AppRouter; //67433264
+
 exports["default"] = _default;

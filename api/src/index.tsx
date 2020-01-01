@@ -52,8 +52,8 @@ const redisClient = redis.createClient({
 
 const redisStore = new RedisStore({ 
     client: redisClient,
+    //ttl: 60 * 5
 });
-
 
 app.use(
     session({
@@ -63,7 +63,8 @@ app.use(
         saveUninitialized: false,
         resave: false,
         cookie: {
-            maxAge: 5 * 60 * 1000,
+            //maxAge: 5 * 60 * 1000,
+            //expires: 15 * 60 * 1000,
             secure: false,
             sameSite: false,
             httpOnly: true

@@ -35,27 +35,6 @@ a {
     }
 
     .homepage {
-
-        .forum {
-            display: flex;
-            flex-flow: row wrap;
-            justify-content: center;
-            padding: 0em .5em 0em .5em;
-            
-            table {
-                border:1px solid black;
-                text-align: center;
-                flex: 1;
-                
-                thead {
-                    font-weight: 600;
-                    
-                    tr {
-                        border-bottom: 1px solid black;
-                    }
-                }
-            }
-        }
         
     }
     
@@ -116,4 +95,31 @@ a {
             }
         }
     }
+
+    .forum {
+        
+    }
+    /*
+    .forum {
+        display: flex;
+        margin: 0em 5em 0em 5em;
+        //flex-flow: row wrap;
+        //justify-content: center;
+        //padding: 0em .5em 0em .5em;
+        
+        table {
+            border:1px solid black;
+            text-align: center;
+            flex: 1;
+            
+            thead {
+                font-weight: 600;
+                
+                tr {
+                    border-bottom: 1px solid black;
+                }
+            }
+        }
+    }
+    */
 }

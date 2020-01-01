@@ -7,7 +7,7 @@ const Navbar = () => {
     const { session } = useContext(SessionContext);
 
     useEffect(() => {
-            console.log("navbar loaded with sesson!", session);
+        //console.log("Checking navbar session, it is currently: ", session);
     }, []);
     
 

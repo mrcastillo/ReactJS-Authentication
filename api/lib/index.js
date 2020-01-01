@@ -66,7 +66,8 @@ var redisClient = _redis["default"].createClient({
 });
 
 var redisStore = new RedisStore({
-  client: redisClient
+  client: redisClient //ttl: 60 * 5
+
 });
 app.use((0, _expressSession["default"])({
   store: redisStore,
@@ -76,7 +77,8 @@ app.use((0, _expressSession["default"])({
   saveUninitialized: false,
   resave: false,
   cookie: {
-    maxAge: 5 * 60 * 1000,
+    //maxAge: 5 * 60 * 1000,
+    //expires: 15 * 60 * 1000,
     secure: false,
     sameSite: false,
     httpOnly: true
