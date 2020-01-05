@@ -37,12 +37,15 @@ const ForumThreads = (props) => {
     const ForumThreads = () => {
         //Check if threads have length(true once axios returns threads)
         if(threads.length > 0) {
+            console.log("threads", threads)
             const threadsHTML = []; //Empty array for our thread elements
 
             _.each(threads, (thread, key) => { //Each thread
                 threadsHTML.push( //Push threadsHTML element
                     <tr key={key}>
-                        <td><Link to={`${URL}/${thread.id}`}>{thread.postSubject}</Link></td>
+                        <td>
+                            <Link to={`${URL}/${thread.id}`}>{thread.threadTitle}</Link>
+                        </td>
                         <td>2</td>
                         <td>{thread.user.email}</td>
                         <td>{thread.createdAt}</td>
@@ -101,9 +104,9 @@ const ForumThreads = (props) => {
     return ( 
         <div>
             <Switch>
-                <Route exact path={`${URL}`} render={(props) => <ForumThreadsRoot {...props}/>}/>
-                <Route exact path={`${URL}/:threadId`} render={(props) => <ForumPost props={props} category={category}/>} />
                 <Route exact path={`${URL}/post/newthread`} render={(props) => <AuthRedirect><CreateThread props={props} category={category} /></AuthRedirect>}/>
+                <Route path={`${URL}/:threadId`} render={(props) => <ForumPost props={props} category={category} />} />
+                <Route exact path={`${URL}`} render={(props) => <ForumThreadsRoot {...props}/>}/>
                 <Route component={NoMatch} />
             </Switch>
         </div>

@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, Route, Switch } from "react-router-dom";
 import _ from "lodash";
 import axios from "axios";
 
+import NewPost from "./NewPost";
+
 const ForumPost = (props) => {
-
-    const [posts, setPosts] = useState([]);
-
+    const [posts, setPosts] = useState([]); //Post array  to store our posts
     const categoryId = props.category.id;
     const threadId = props.props.match.params.threadId;
-    console.log(props.category.subject)
     var subject = props.category.subject;
+
+    //Get the URL used for our Route Rendering for forum posts
+    const URL = props.props.match.url;
 
     const trimLowerCase = (text) => {
         var newText = text.replace(/\s+/g, '');
@@ -28,36 +30,36 @@ const ForumPost = (props) => {
     
 
     const PostElement = () => {
-        
-        if(posts.length > 0) {
-            console.log(posts)
-            const postElement = [];
-            _.each(posts, (post, key) => {
-                postElement.push(
-                <tr key={key}>
-                    <td>{post.id}</td>
-                    <td>{post.user.email}</td>
-                    <td>{post.postComment}</td>
-                    <td>{post.createdAt}</td>
-                </tr>
+        if(posts) {
+            console.log("posts bro", posts.forumPosts);
+
+            const replies = posts.forumPosts;
+            const repliesElement = [];
+
+            _.each(replies, (reply) => {
+                repliesElement.push(
+                    <div>
+                        <p>Poster: {reply.user.email}</p>
+                        <p>{reply.postComment}</p>
+                    </div>
                 )
             });
 
             return (
-                <React.Fragment>
-                    {postElement}
-                </React.Fragment>
-            )
-            
+                <div>
+                    <div>
+                        <p>Poster: {posts.originalPoster}</p>
+                        <h1>{posts.threadTitle}</h1>
+                        <p>{posts.originalComment}</p>
+                    </div>
+
+                    {repliesElement}        
+                </div>
+            )            
         }
         else {
             return(
-                <tr>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                </tr>
+                <div>Loading....</div>
             )
         }
     };
@@ -66,27 +68,14 @@ const ForumPost = (props) => {
         <div>
             <h1><Link to={`/forum/${trimLowerCase(subject)}`}>Back</Link></h1>
             <hr />
-            <table>
-                <thead>
-                    <tr>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td><Link to={"/"}>New Post</Link></td>
-                    </tr>
-                    <tr>
-                        <td>Id</td>
-                        <td>User</td>
-                        <td>Comment</td>
-                        <td>Date</td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <PostElement />
-                </tbody>
-            </table>
+            <Link to={`/forum/${trimLowerCase(subject)}/${threadId}/post`}>New Post</Link>
+            
+            <Route path={`${URL}`} render={(props) => <PostElement />} />
+            <Route path={`${URL}/post`} component={(props) => <NewPost URL={URL} threadId={threadId}/>} />
         </div>
      );
 }
  
 export default ForumPost;
+
+//<Link to={`/forum/${trimLowerCase(subject)}/${threadId}/post`}>New Post</Link>

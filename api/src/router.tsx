@@ -371,7 +371,7 @@ class AppRouter {
 
         app.get("/forum/:subjectId", (req, res) => {
             var id = req.params.subjectId;
-
+            
             db.models.forumThreads.findAll({
                 where: {
                     forumSubjectId: id
@@ -395,28 +395,119 @@ class AppRouter {
         });
 
         app.get("/forum/:subjectId/:threadId", (req, res) => {
+            const subjectId = req.params.subjectId;
             const threadId = req.params.threadId;
 
-            db.models.forumPosts.findAll({
+            db.models.forumThreads.findOne({
                 where: {
-                    forumThreadId: threadId
+                    id: threadId,
+                    forumSubjectId: subjectId
                 },
                 include: [{
-                    model: db.models.user,
-                    attributes: {
-                        exclude: ["id", "password", "role", "createdAt", "updatedAt"]
-                    }
+                    model: db.models.forumPosts,
+                    include: [{
+                        model: db.models.user,
+                        attributes: {
+                            exclude: ["id", "password", "role", "createdAt", "updatedAt"]
+                        }
+                    }]
                 }]
             })
-            .then((posts) => {
-                console.log(posts);
-                res.send(posts);
+            .then((thread) => {
+                console.log(thread);
+                res.send(thread);
                 res.end();
             })
             .catch((error) => {
-                console.error(error);
+                res.send(error);
                 res.end();
             })
+        });
+
+        app.post("/forum/newthread", (req, res) => {
+            const user = req.session.user;
+            const userId = req.session.userId;
+            const forumSubjectId = req.body.forumSubjectId;
+
+            console.log(req.body)
+
+            if(user) {
+                const threadTitle =  req.body.title;
+                const threadBody = req.body.comment;
+
+                db.models.forumThreads.create({
+                    threadTitle,
+                    originalComment: threadBody,
+                    originalPoster: user,
+                    userId,
+                    forumSubjectId
+                })
+                .then((insertedResult) => {
+                    console.log(insertedResult);
+                    res.send(insertedResult);
+                    res.end();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    res.end();
+                })
+            }
+            else {
+                res.send("Not logged in.");
+                res.end();
+            }
+        });
+
+        app.post("/test", (req, res) => {
+            const user = req.session.user;
+            const userId = req.session.userId;
+
+            if(user) {
+                const userSubmittedComment = req.body.postComment;
+                const threadId = req.body.threadId;
+
+                db.models.forumPosts.create({
+                    postComment: userSubmittedComment,
+                    forumThreadId: threadId,
+                    status: "approved",
+                    userId
+                })
+                .then((insertedResult) => {
+                    console.log(insertedResult);
+                    res.send(insertedResult);
+                    res.end();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    res.end();
+                })
+            }
+            /*
+            if(user) {
+                const threadTitle =  req.body.title;
+                const threadBody = req.body.comment;
+
+                db.models.forumThreads.create({
+                    threadTitle,
+                    originalComment: threadBody,
+                    forumSubjectId: 2,
+                    userId
+                })
+                .then((insertedResult) => {
+                    console.log(insertedResult);
+                    res.send(insertedResult);
+                    res.end();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    res.end();
+                })
+            }
+            else {
+                res.send("Not logged in.");
+                res.end();
+            }
+            */
         });
     }
 }

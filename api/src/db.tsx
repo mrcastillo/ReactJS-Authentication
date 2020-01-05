@@ -39,8 +39,16 @@ const ForumSubjects = sequelize.define("forumSubjects", {
 });
 
 const ForumThreads = sequelize.define("forumThreads", {
-    postSubject: {
+    threadTitle: {
         type: new DataTypes.STRING
+    },
+    originalComment: {
+        type: new DataTypes.STRING,
+        allowNull: false
+    },
+    originalPoster: {
+        type: new DataTypes.STRING,
+        allowNull: false
     },
     createdAt: {
         type: new DataTypes.DATE
@@ -55,7 +63,8 @@ const ForumThreads = sequelize.define("forumThreads", {
 
 const ForumPosts = sequelize.define("forumPosts", {
     postComment: {
-        type: new DataTypes.STRING
+        type: new DataTypes.STRING,
+        allowNull: false
     },
     status: {
         type: new DataTypes.ENUM,

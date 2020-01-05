@@ -104,3 +104,19 @@ export const confirmPassword = (userSubmittedPassword, userSubmittedConfirmPassw
 
     return confirmPasswordValidation;
 }
+
+export const validatePostComment = (userSubmittedComment) => {
+
+    const isCommentValidLength = {
+        valid: !validator.isByteLength(userSubmittedComment, {
+            min: 2,
+            max: 1000
+        }),
+        error: "Post comment is either too short or too long."
+    };
+
+    const isCommentASCII = {
+        valid: validator.isAscii(userSubmittedComment),
+        error: "Comment contains invalid characters."
+    }
+}

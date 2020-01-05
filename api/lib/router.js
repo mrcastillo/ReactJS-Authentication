@@ -378,25 +378,106 @@ function () {
         });
       });
       app.get("/forum/:subjectId/:threadId", function (req, res) {
+        var subjectId = req.params.subjectId;
         var threadId = req.params.threadId;
-        db.models.forumPosts.findAll({
+        db.models.forumThreads.findOne({
           where: {
-            forumThreadId: threadId
+            id: threadId,
+            forumSubjectId: subjectId
           },
           include: [{
-            model: db.models.user,
-            attributes: {
-              exclude: ["id", "password", "role", "createdAt", "updatedAt"]
-            }
+            model: db.models.forumPosts,
+            include: [{
+              model: db.models.user,
+              attributes: {
+                exclude: ["id", "password", "role", "createdAt", "updatedAt"]
+              }
+            }]
           }]
-        }).then(function (posts) {
-          console.log(posts);
-          res.send(posts);
+        }).then(function (thread) {
+          console.log(thread);
+          res.send(thread);
           res.end();
         })["catch"](function (error) {
-          console.error(error);
+          res.send(error);
           res.end();
         });
+      });
+      app.post("/forum/newthread", function (req, res) {
+        var user = req.session.user;
+        var userId = req.session.userId;
+        var forumSubjectId = req.body.forumSubjectId;
+        console.log(req.body);
+
+        if (user) {
+          var threadTitle = req.body.title;
+          var threadBody = req.body.comment;
+          db.models.forumThreads.create({
+            threadTitle: threadTitle,
+            originalComment: threadBody,
+            originalPoster: user,
+            userId: userId,
+            forumSubjectId: forumSubjectId
+          }).then(function (insertedResult) {
+            console.log(insertedResult);
+            res.send(insertedResult);
+            res.end();
+          })["catch"](function (error) {
+            console.error(error);
+            res.end();
+          });
+        } else {
+          res.send("Not logged in.");
+          res.end();
+        }
+      });
+      app.post("/test", function (req, res) {
+        var user = req.session.user;
+        var userId = req.session.userId;
+
+        if (user) {
+          var userSubmittedComment = req.body.postComment;
+          var threadId = req.body.threadId;
+          db.models.forumPosts.create({
+            postComment: userSubmittedComment,
+            forumThreadId: threadId,
+            status: "approved",
+            userId: userId
+          }).then(function (insertedResult) {
+            console.log(insertedResult);
+            res.send(insertedResult);
+            res.end();
+          })["catch"](function (error) {
+            console.error(error);
+            res.end();
+          });
+        }
+        /*
+        if(user) {
+            const threadTitle =  req.body.title;
+            const threadBody = req.body.comment;
+              db.models.forumThreads.create({
+                threadTitle,
+                originalComment: threadBody,
+                forumSubjectId: 2,
+                userId
+            })
+            .then((insertedResult) => {
+                console.log(insertedResult);
+                res.send(insertedResult);
+                res.end();
+            })
+            .catch((error) => {
+                console.error(error);
+                res.end();
+            })
+        }
+        else {
+            res.send("Not logged in.");
+            res.end();
+        }
+        */
+
       });
     }
   }]);
