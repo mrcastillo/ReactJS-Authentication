@@ -1,6 +1,8 @@
 import validator from "validator";
 import _ from "lodash";
 
+//~!@#$%^&*()-+=?/<>|[]{}_ :;.,\`
+
 const emailWhitelist = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789-_.@+";
 
 export const isEmail = (userSubmittedEmail) => {
@@ -45,6 +47,12 @@ export const isEmail = (userSubmittedEmail) => {
 
 
 //Password
+//Must be 8-64 characters in length or RFC specifications
+//Cannot be empty
+//May not use username as password or other sensitive information.
+//Must contain a lowercase and uppercase character.
+//Must contain a number
+//Must contain an non-alphanumeric character (punctuation mark or other symbol)
 export const validPassword = (userSubmittedPassword) => {
     //Check if password is empty
     const isPasswordEmpty = {
@@ -118,5 +126,6 @@ export const validatePostComment = (userSubmittedComment) => {
     const isCommentASCII = {
         valid: validator.isAscii(userSubmittedComment),
         error: "Comment contains invalid characters."
-    }
+    };
+
 }

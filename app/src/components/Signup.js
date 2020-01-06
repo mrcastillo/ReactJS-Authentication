@@ -1,56 +1,56 @@
 import React, { useState } from "react";
 import { Link, useHistory} from "react-router-dom";
-import { isEmail, validPassword, confirmPassword } from "../validators/Validator";
+import { isEmail, validPassword, confirmPassword } from "../validators/JoiValidator";
 import _ from "lodash";
 import bcrypt from "bcryptjs";
 import axios from "axios";
 
 const Signup = () => {
     const history = useHistory();
-
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [confirmedPassword, setConfirmedPassword] = useState("");
-
-    const [formErrors, setFormErrors] = useState({
+    //Set States for Signup Page
+    const [email, setEmail] = useState(""); //Email
+    const [password, setPassword] = useState(""); //Password
+    const [confirmedPassword, setConfirmedPassword] = useState(""); //Repeat Password
+    const [formErrors, setFormErrors] = useState({ //Form Errors 
         errors: false,
         messages: []
     });
 
-    const handleEmailInput = (e) => {
+    const handleEmailInput = (e) => { //Update email input
         setEmail(e.target.value);
     }
 
-    const handlePasswordInput = (e) => {
+    const handlePasswordInput = (e) => { //Update password input
         setPassword(e.target.value);
     }
 
-    const handleConfirmedPasswordInput = (e) => {
+    const handleConfirmedPasswordInput = (e) => { //Update repeat password input
         setConfirmedPassword(e.target.value);
     }
 
+    //FORM SUBMITTION
     const handleSubmit = (e) => {
-        e.preventDefault();
-
-        const emailValidation = isEmail(email);
-        const passwordValidation = validPassword(password);
-        const confirmPasswordValidation = confirmPassword(password, confirmedPassword)
-        
-        if(!emailValidation.validated || !passwordValidation.validated || !confirmPasswordValidation.validated) {
-            console.log("Form Errors....")
+        e.preventDefault(); //Stops page refresh
+        const validEmail = isEmail(email); //validate email
+        const isValidPassword = validPassword(password); //validate password 
+        const validRepeatPassword = confirmPassword(confirmedPassword); //validate repeat password
+        console.log(validEmail)
+        if(!validEmail.validated || !isValidPassword.validated || validRepeatPassword.validated) {
+            
+            //Create error array that will list the validation errors.
             const allErrors = [
-                ...emailValidation.errors,
-                ...passwordValidation.errors,
-                ...confirmPasswordValidation.errors
-            ];
+                validEmail.errors,
+                isValidPassword.errors,
+                validRepeatPassword.errors
+            ]
+            setEmail("");
+            setPassword("");
+            setConfirmedPassword("");
 
             setFormErrors({
                 errors: true,
                 messages: allErrors
             });
-            setEmail("");
-            setPassword("");
-            setConfirmedPassword("");
             return;
         }
         else {
@@ -136,13 +136,13 @@ const Signup = () => {
             <div>
                 <form method={"POST"} onSubmit={handleSubmit}>
                     <label>Email/Username</label>
-                    <input type={"text"} value={email} onChange={handleEmailInput}/>
+                    <input type={"text"} value={email} onChange={handleEmailInput} required/>
 
                     <label>Password</label>
-                    <input type={"text"} value={password} onChange={handlePasswordInput}/>
+                    <input type={"text"} value={password} onChange={handlePasswordInput} required/>
                     
                     <label>Confirm Password</label>
-                    <input type={"text"} value={confirmedPassword} onChange={handleConfirmedPasswordInput}/>
+                    <input type={"text"} value={confirmedPassword} onChange={handleConfirmedPasswordInput} required/>
                     <br/>
 
                     <input type={"submit"} value={"Create Account"}/>
