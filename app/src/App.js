@@ -29,11 +29,7 @@ class App extends Component {
                     </AuthRedirect>
                   </Route>
 
-                  <Route path={"/logout"}>
-                    <AuthRedirect>
-                      <Logout />
-                    </AuthRedirect>
-                  </Route>
+                  <Route path={"/logout"} component={Logout} />
 
                   <Route path={"/signup"}>
                     <AuthRedirect hideOnLogin={true}>

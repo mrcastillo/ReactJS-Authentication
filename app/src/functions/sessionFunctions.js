@@ -20,19 +20,11 @@ export const sessionStatus = async (dispatch) => {
 }
 
 export const sessionDestroy = async (dispatch) => {
-    const destroyedSession = await axios("http://localhost:8080/forum/logout");
+    const destroyedSession = await axios.get("http://localhost:8080/account/logout");
+    console.log("SESSION HERE", destroyedSession)
     
     dispatch({
         type: "SESSION_DESTROY",
         destroyedSession
     });
-}
-
-export const fakeSession = async (dispatch) => {
-    const fakeSession = await axios("http://localhost:8080/forum/fakelogin");
-
-    dispatch({
-        type: "FAKE_LOGIN",
-        fakeSession
-    })
 }

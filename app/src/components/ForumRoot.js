@@ -26,7 +26,7 @@ const ForumRoot = (props) => {
             });
         }
         
-        return(
+        return (
             <React.Fragment>
                 {categoryElements}
             </React.Fragment>

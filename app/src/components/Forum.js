@@ -25,9 +25,6 @@ class Forum extends React.Component {
             this.setState({
                 forumCategories: categories
             });
-        })
-        .catch((error) => {
-            console.error(error);
         });
     };
 

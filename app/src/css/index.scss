@@ -50,15 +50,71 @@ a {
                 input {
                     margin: 1em 0em 1em 0em;
                 }
+
+                #email {
+                    border: 1px solid red;
+                }
+                #email:focus {
+                    border: 5px solid purple;
+                }
             }
         }
     }
 
-    .signup {
+    .signup-page {
         text-align: center;
 
+        div {
+            form {
+                label {
+                    display: block;
+                    font-weight: 900;
+                    //text-decoration: overline;
+                }
+        
+                input {
+                    margin: 1em 0em .5em 0em;
+                    border: 1px solid black;
+                    outline: none;
+                }
+
+                .input-valid {
+                    border: 1px solid green;
+                }
+
+                .input-pending {
+                    border: 1px solid black;
+                }
+
+                .input-invalid {
+                    border: 1px solid red;
+                }
+                
+                .input-invalid:focus {
+                    border: 1px solid red;
+                    outline: none;
+                }
+            }
+        }
         
     }
+    .input-valid {
+        border: 2px solid green;
+    }
+
+    .input-pending {
+        border: 1px solid black;
+    }
+
+    .input-invalid {
+        border: 1px solid red;
+    }
+    
+    .input-invalid:focus {
+        border: 1px solid red;
+        outline: none;
+    }
+
 
     .form-errors {
         color:red;

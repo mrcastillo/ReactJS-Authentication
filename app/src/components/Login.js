@@ -1,8 +1,6 @@
 import React, { useState, useContext} from "react";
 import { Link, useHistory } from "react-router-dom";
-import { sessionSet } from "../functions/sessionFunctions";
 import { SessionContext } from "../context/SessionContext";
-import { isEmail } from "../validators/Validator";
 import _ from "lodash";
 import axios from "axios";
 
@@ -26,55 +24,59 @@ const Login = () => {
         setPassword(e.target.value);
     }
 
+    const AxiosRequest = () => {
+        axios.post("http://localhost:8080/forum/login", {
+            email, password
+        })
+        .then((loginReplyAxios) => {
+            const loginReply = loginReplyAxios.data;
+
+            //Check if server returned  errors
+            if(loginReply.errors) {
+                setFormErrors({
+                    errors: true,
+                    messages: loginReply.errors
+                });
+                setPassword("");
+            }
+            else {
+                dispatch({
+                    type: "SESSION_SET",
+                    loginSession: loginReply
+                });
+                history.push("/account")
+            };
+        })
+        .catch((error) => {
+            setPassword("");
+            setFormErrors({
+                errors: true,
+                messages: ["There was an internal server error. Please try again later."]
+            });
+            
+        })
+    }
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        const emailValidation = isEmail(email);
+        const emailLengthValid = email.length > 0 ? true : false;
+        const passwordLengthValid = password.length > 0 ? true : false;
 
-        if(emailValidation.validated) {
-            console.log("input validated!");
-
-            axios.post("http://localhost:8080/forum/login", {
-                email, password
-            })
-            .then((loginReplyAxios) => {
-                const loginReply = loginReplyAxios.data;
-
-                //Check if server returned 
-                if(loginReply.errors) {
-                    setFormErrors({
-                        errors: true,
-                        messages: loginReply.errors
-                    });
-                }
-                else {
-                    dispatch({
-                        type: "SESSION_SET",
-                        loginSession: loginReply
-                    });
-                };
-            })
-            .catch((error) => {
-                console.log(error)
-                setFormErrors({
-                    errors: true,
-                    messages: ["There was an internal server error. Please try again later."]
-                })
-            })
-        }
-        else {
-            const allErrors = [...emailValidation.errors];
-
+        if(!emailLengthValid) {
+            var errorMsgs = ["Please enter an Email."];
             setFormErrors({
                 errors: true,
-                messages: allErrors
-            });
-
-            console.log("There were errors!");
-
-            setEmail("");
-            setPassword("");
-        };
+                messages: errorMsgs
+            })
+        } else if (emailLengthValid && !passwordLengthValid) {
+            var errorMsgs = ["Please enter a Password"];
+            setFormErrors({
+                errors: true,
+                messages: errorMsgs
+            })
+        } else {
+            AxiosRequest();
+        }
     }
 
     //Form Errors
@@ -109,11 +111,11 @@ const Login = () => {
             <FormErrorsElement />
             <div>
                 <form onSubmit={handleSubmit} method={"POST"}>
-                    <label>Email/Username</label>
-                    <input type={"text"} name={"email"} value={email} onChange={handleEmailInput}/>
+                    <label htmlFor={"password"}>Email or Username</label>
+                    <input type={"text"} name={"email"} value={email} onChange={handleEmailInput} />
 
-                    <label>Password</label>
-                    <input type={"text"} name={"password"} value={password} onChange={handlePasswordInput}/>
+                    <label htmlFor={"password"}>Password</label>
+                    <input type={"password"} name={"password"} value={password} onChange={handlePasswordInput} />
                     
                     <br/>
 

@@ -14,12 +14,5 @@ export const sessionReducer = (state, action) => {
             const destroyedSession = action.destroyedSession.data;
             console.log("session destroy activeated", destroyedSession)
             return destroyedSession;
-
-        case "FAKE_LOGIN":
-            console.log("login activated")
-            const fakeSession = action.fakeSession.data;
-            return fakeSession;
-        default:
-            return state;
     }
 }

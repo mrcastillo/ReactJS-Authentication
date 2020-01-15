@@ -101,6 +101,15 @@ var User = sequelize.define("user", {
     },
     unique: true
   },
+  username: {
+    type: new _sequelize.DataTypes.STRING(32),
+    allowNull: false,
+    validate: {
+      notEmpty: true,
+      len: [3, 32]
+    },
+    unique: true
+  },
   password: {
     type: new _sequelize.DataTypes.STRING(255),
     allowNull: false,

@@ -1,6 +1,7 @@
 import _ from "lodash";
 import bcrypt from "bcryptjs";
 import { Model } from "sequelize/lib/sequelize";
+import { isEmail, alphanumericUsername, validPassword } from "./validations/JoiValidator";
 
 
 interface sessionInterface {
@@ -8,6 +9,10 @@ interface sessionInterface {
     serverReplied?: boolean,
     error?: any
 };
+interface regularResponse {
+    data: object,
+    error: object
+}
 
 class AppRouter {
     constructor(app){
@@ -22,86 +27,209 @@ class AppRouter {
         const store = app.get("redisStore");
         //const uploader = app.get("uploader");
 
+        //Checks the user session and returns the session
         app.get("/forum/session", (req, res) => {
             const userSession: sessionInterface = {
                 serverReplied: true,
                 user: req.session.user ? req.session.user : ""
             };
+            res.send(userSession); res.end();
+        });
 
-            if(req.session.user) {
-                res.send(userSession);
-                res.end();
-            }
-            else {
-                res.send(userSession);
-                res.end();
+        //Show Forum Categories
+        app.get("/forum", async (req, res) => {
+            try {
+                const categories = await db.models.forumSubjects.findAll();
+                res.send(categories); res.end();
+            } catch (e) {
+                res.status(500).send(null); res.end();
             }
         });
 
-        app.post("/forum/login", (req, res) => {
-            //Return variable from our POST data for our user data.
-            const userSubmittedPOSTData = req.body;
+        //Show Forum Threads
+        app.get("/forum/:subjectId", async (req, res) => {
+            const subjectId = req.params.subjectId;
+            try {
+                const threads = await db.models.forumThreads.findAll({
+                    where: {
+                        forumSubjectId: subjectId
+                    },
+                    include: [{
+                        model: db.models.user,
+                        attributes: {
+                            exclude: ["id", "password", "role", "createdAt", "updatedAt"]
+                        }
+                    }]
+                });
+
+                res.send(threads); res.end();
+            } catch(e) {
+                console.error("Error with getting forum threads. ", e);
+                res.status(500).send(null);
+            }
+        });
+
+
+        app.get("/forum/:subjectId/:threadId", async (req, res) => {
+            const subjectId = req.params.subjectId;
+            const threadId = req.params.threadId;
+
+            //Try to get all post from thread in the DB.
+            try {
+                const threadPosts = await db.models.forumThreads.findOne({
+                    where: {
+                        id: threadId,
+                        forumSubjectId: subjectId
+                    },
+                    include: [{
+                        model: db.models.forumPosts,
+                        include: [{
+                            model: db.models.user,
+                            attributes: {
+                                exclude: ["id", "password", "role", "createdAt", "updatedAt"]
+                            }
+                        }]
+                    }]
+                });
+                //Send all post in the thread
+                res.send(threadPosts); res.end();
+            } catch (e) {
+                console.error("Error with getting thread posts", e);
+                res.status(500).send(null); res.end();
+            }
+        });
+
+        app.post("/forum/newthread", async (req, res) => {
+            if(!req.session.user) {
+                res.status(500).send("Unavailable.");
+                return;
+            };
+            //SESSION
+            const user = req.session.user;
+            const userId = req.session.userId;
+            //REQ BODY
+            const forumSubjectId = req.body.forumSubjectId;
+            const threadTitle = req.body.title;
+            const threadBody = req.body.comment;
+
+            try {
+                const createPost = await db.models.forumThreads.create({
+                    threadTitle,
+                        originalComment: threadBody,
+                        originalPoster: user,
+                        userId,
+                        forumSubjectId
+                });
+                res.send(createPost); res.end();
+            } catch (e) {
+                console.error(e);
+                res.status(500).send(null);
+            }
+        });
+
+        app.post("/forum/login", async (req, res) => {
+            if(req.session.user)
+            {
+                res.status(500).send("Unavailable");
+                res.end();
+                return;
+            }
+            
+            //Get post variables from user
             const userSubmittedEmail = req.body.email;
             const userSubmittedPassword = req.body.password;
+            
+            const emailValidation = isEmail(userSubmittedEmail).validated;
+            const usernameValidation = alphanumericUsername(userSubmittedEmail).validated;
+            const passwordValidation = validPassword(userSubmittedPassword).validated;
+            
+            if((emailValidation || usernameValidation) && passwordValidation) {
 
-            //Query the DB using the "User" model to find one entry in the table where user submitted email matches it in the database.
-            db.models.user.findOne({
-                where: {
-                    email: userSubmittedEmail
-                }
-            })
-            .then((findUserQueryResult) => {
-                //If we did not find a result from our query send back an error.
-                if(findUserQueryResult === null) {
-                    //Send back error to client that user was not found
-                    res.send({
-                        serverReplied: true,
-                        user: "",
-                        errors: ["Please check your email and password."]
+                try {
+                    const userFromDB = await db.models.user.findOne({
+                        where: {
+                            [db.Op.or]: [{email: userSubmittedEmail}, {username: userSubmittedEmail}]
+                        }
+                    });
 
-                    } as sessionInterface);
+                    //Checks to see if submittedpassword matches with db password.
+                    const passwordMatch = await bcrypt.compare(userSubmittedPassword, userFromDB.dataValues.password); 
+                    
+                    if(passwordMatch === true) { //Password Matches
+                        //SETS THE SESSION, SESSION IS SET HERE
+                        req.session.user = userFromDB.dataValues.username;
+                        req.session.email = userFromDB.dataValues.email;
+                        req.session.userId = userFromDB.dataValues.id;
+                        //Login Response
+                        //Returns back an object featuring the user
+                        res.send({user: req.session.user}); res.end();
+                    } //Password Dont match
+                    else {
+                        res.send({ errors: ["Invalid Password."]}); res.end();
+                    }
+                } catch(e) {
+                    console.error(e);
+                    res.send({errors: ["Invalid Email/Username or Pasword."]});
                     res.end();
                 }
-                else {
-                    //Store DB PAssword
-                    const dbPassword = findUserQueryResult.dataValues.password
-
-                    //Compare the user password to the hash in the DB
-                    bcrypt.compare(userSubmittedPassword, dbPassword, (err, bcryptHashIsMatching) => {
-                        //Error if bcrypt compare didnt work for whatever reason.
-                        if(err) {
-                            console.error("There was an error with bcrypt compare function.", err);
-                            res.status({
-                                errors: ["There wasn an internal server error."]
-                            } as sessionInterface);
-                            res.end();
-                        }
-                        //Execute if we find a valid hash (Passwords Match);
-                        if(bcryptHashIsMatching) {
-                            //SETS THE SESSION, SESSION IS SET HERE
-                            req.session.user = findUserQueryResult.dataValues.email;
-                            req.session.userId = findUserQueryResult.dataValues.id;
-                            //Login Response
-                            //Returns back an object featuring the user
-                            res.send({
-                                user: req.session.user
-                            });
-                            res.end();
-                        } else {
-                            //User does not match DB password
-                            res.send({
-                                errors: ["Invalid Password."]
-                            } as sessionInterface);
-                            res.end();
-                        }
-                    })
-                }
-            });
+            } else {
+                res.send({errors: ["Invalid Email/Username or Pasword."]});
+                res.end();
+            }
         });
+
+        app.get("/account/logout", async (req, res) => {
+
+            if(!req.session.user) {
+                res.status(500).send(null); res.end();
+                return;
+            }
+
+            try {
+                await store.destroy();
+                await req.session.destroy();
+                res.send({ serverReplied: true, user: "" });
+                res.end();
+            } catch(e) {
+                console.error(e);
+                res.send({ serverReplied: true, user: "" });
+                res.end();
+            }
+        });
+
+        app.post("/account/signup", async (req, res) => {
+            if(req.session.user){
+                res.status(500).send(null);
+                return;
+            }
+            const validUsername = alphanumericUsername(req.body.username).validated;
+            const validEmail = isEmail(req.body.email).validated;
+            const isValidPassword =  validPassword(req.body.password);
+
+            if(!validUsername || !validEmail || !isValidPassword) {
+                res.status(500).send(null);
+                return;
+            }
+
+            try {
+                const createUser = db.models.user.create({
+                    username: req.body.username.toLowerCase(),
+                    email: req.body.email,
+                    password: req.body.password,
+                    role: 1
+                });
+
+            } catch (e) {
+                console.error(e);
+                res.status(500).send(null);
+            }
+        };
 
         app.post("/forum/signup", (req, res) => {
             const userPostedData =  req.body;
+
             db.models.user.create({
+                username: userPostedData.username.toLowerCase(),
                 email: userPostedData.email,
                 password: userPostedData.password,
                 role: 1
@@ -115,12 +243,15 @@ class AppRouter {
                 const errorCode = err.parent.errno;
                 var errorMsg = [];
                 switch(errorCode) {
-                    case 1062: 
-                        errorMsg.push("Email already in use. Please use another email adress.");
+                    case 1062:
+                        let validationPathError = err.errors[0].path;
+                        validationPathError = validationPathError[0].toUpperCase() + validationPathError.slice(1);
+                        errorMsg.push(`${validationPathError} is already in use.`)
                         break;
                         default:
                             errorMsg.push("There was an internal server error.");
                 }
+
                 res.send({
                     errors: errorMsg
                 }as sessionInterface);
@@ -128,139 +259,54 @@ class AppRouter {
             })
         });
 
-        app.get("/forum/logout", (req ,res) => {
-            const destroyedSession: sessionInterface = {
-                serverReplied: true,
-                user: ""
+        //Need to perform validation on the backend.
+        app.post("/forum/account/changepassword", async (req, res) => {
+            //Check if we are logged in first and return out of the request is so.
+            if(!req.session.user) {
+                res.status(500).send("Unavailable.");
+                return;
             }
-            
-            if(req.session.user) {
-                //destroy session
-                store.destroy(req.sessionID, (err) => {
-                    if(err) {
-                        console.error("Unable to destroy redis session\n", err);
-                        res.send(destroyedSession);
-                        res.end();
-                    };
-                    req.session.destroy((err) => {
-                        if(err) {
-                            console.error("Unable to destroy express session.\n", err);
-                            res.send(destroyedSession);
-                            res.end();   
-                        }
-                        res.send(destroyedSession);
-                        res.end();
-                    });
-                })
-            }
-            else {
-                res.send(destroyedSession);
-                res.end();
-            }
-        });
 
-        app.post("/forum/account/changepassword", (req, res) => {
-            const userSubmittedPassword = req.body.password;
-            const userSubbmitedNewPassword = req.body.newPassword;
-            //Search for the user inside the database, so that we can check on the user stored password
-            db.models.user.findOne({
+            const submittedPassword = req.body.password;
+            const submittedNewPassword = req.body.newPassword;
+
+            //Return the user object from the DB, NULL if not found
+            const userFromDB = await db.models.user.findOne({
                 where: {
-                    email: req.session.user
+                    username: "peach"
                 }
-            })
-            .then((queryResult) => {
-                //If no user by req.session.user then logout, wont happen since we are logged in from the req.session.user
-                if(queryResult === null) {
-                    console.log("NO USER IN DB AFTER CHANGE PASSWORD REQUEST")
-                    res.status(500).send({
-                        errors: ["User is not logged in or does not exist."]
-                    } as sessionInterface);
-                }
-                else {
-                    //Copy the password from the database
-                    const userPassword = queryResult.dataValues.password;
-                    
-                    //Compare the user submitted passord to the hash inside the DB(our user password)
-                    bcrypt.compare(userSubmittedPassword, userPassword, (err, passwordsMatch) => {
-                        //There was an error with the compare function
-                        if(err){
-                            console.error("There was an error with the compare function");
-                            res.send({
-                                errors: ["There was an error with the compare function."]
-                            });
-                            res.end();
-                        }
-                        else {
-                            //Checks the boolean result of bcrypt.compare
-                            //If the passwords match, we hash the new password submitted by the user.
-                            if(passwordsMatch){
-                                //Salt Password
-                                bcrypt.genSalt(10, (err, salt) => {
-                                    if(err) {
-                                        console.error(err);
-                                        return;
-                                    };
-                                    //Hash user submitted new  password with salt
-                                    bcrypt.hash(userSubbmitedNewPassword, salt, (err, hash) => {
-                                        if(err) {
-                                            console.error(err);
-                                            return;
-                                        };
-                                        //Update model password where email matches req.session.user(that we get from login) to contain the newl hashed password
-                                        db.models.user.update({
-                                            password: hash
-                                        },
-                                        {
-                                            where: {
-                                                email: req.session.user
-                                            }
-                                        })
-                                        .then((queryResult) => {
-                                            //Checks the query result
-                                            //Query result returns an array with a number
-                                            const didUserUpdate = queryResult[0];
-                                            if(didUserUpdate) {
-                                                res.send({
-                                                    serverReplied: true
-                                                } as sessionInterface);
-                                                res.end();
-                                            }
-                                            else {
-                                                res.send({
-                                                    errors: ["There was an internal server error"]
-                                                } as sessionInterface);
-                                                res.end();
-                                            }
-                                        })
-                                        .catch((err) => {
-                                            res.send({
-                                                errors: ["There was an internal server error"]
-                                            });
-                                            res.end();
-                                        })
-                                    });
-                                });
-                            }
-                            else {
-                                console.log("Passwords dont match");
-                                res.send({
-                                    errors: ["Current Password is invalid."],
-                                    status:  false
-                                });
-                                res.end();
-                            }
-                        }
-                    })
-                }
-            })
-            .catch((err) => {
-                console.error(err);
-                res.send({
-                    errors: ["There was an error with the findone query"],
-                    status: false
-                });
-                res.end();
             });
+            
+            //Checks if we returned a user.
+            if(userFromDB) {
+                //Check if user has inputted the samee password in the DB 
+                const areDBandNewPasswordSame = await bcrypt.compare(submittedNewPassword, userFromDB.password);
+                //Get out of the request is the passwords are the same
+                if(areDBandNewPasswordSame) {
+                    res.send({errors: ["New Password cannot be the same as old password."]});
+                    res.end();
+                    return;
+                }
+
+                console.log(userFromDB.password, submittedPassword)
+                //Check if the actual passwords matches that in the DB
+                const doPasswordsMatch = await bcrypt.compare(submittedPassword, userFromDB.password);
+                console.log(doPasswordsMatch)
+                if(doPasswordsMatch) {
+                    const bcryptSalt = await bcrypt.genSalt(10);
+                    const bcryptHash = await bcrypt.hash(submittedNewPassword, bcryptSalt);
+
+                    const updateUserPassword = await db.models.user.update({password: bcryptHash},{where: {username: "peach"}});
+
+                    res.send(updateUserPassword)
+                    res.end();
+                } else {
+                    res.send({
+                        errors: ["Current Password is invalid"]
+                    });
+                    res.end();
+                }
+            }
         });
 
         app.post("/forum/account/delete", (req, res) => {
@@ -350,169 +396,8 @@ class AppRouter {
                 console.error(err);
             })
         });
-
-        app.get("/forum", (req, res) => {
-            db.models.forumSubjects.findAll()
-            .then((queryResult) => {
-                if(queryResult.length > 0){
-                    res.send(queryResult);
-                    res.end();
-                }
-                else {
-                    res.send(queryResult);
-                    res.end();
-                }
-            })
-            .catch((err) => {
-                res.send(err);
-                res.end();
-            });            
-        });
-
-        app.get("/forum/:subjectId", (req, res) => {
-            var id = req.params.subjectId;
-            
-            db.models.forumThreads.findAll({
-                where: {
-                    forumSubjectId: id
-                },
-                include: [{
-                    model: db.models.user,
-                    attributes: {
-                        exclude: ["id", "password", "role", "createdAt", "updatedAt"]
-                    }
-                }]
-            })
-            .then((threads) => {
-                console.log(threads);
-                res.send(threads);
-                res.end();
-            })
-            .catch((error) => {
-                console.error(error);
-                res.end();
-            })
-        });
-
-        app.get("/forum/:subjectId/:threadId", (req, res) => {
-            const subjectId = req.params.subjectId;
-            const threadId = req.params.threadId;
-
-            db.models.forumThreads.findOne({
-                where: {
-                    id: threadId,
-                    forumSubjectId: subjectId
-                },
-                include: [{
-                    model: db.models.forumPosts,
-                    include: [{
-                        model: db.models.user,
-                        attributes: {
-                            exclude: ["id", "password", "role", "createdAt", "updatedAt"]
-                        }
-                    }]
-                }]
-            })
-            .then((thread) => {
-                console.log(thread);
-                res.send(thread);
-                res.end();
-            })
-            .catch((error) => {
-                res.send(error);
-                res.end();
-            })
-        });
-
-        app.post("/forum/newthread", (req, res) => {
-            const user = req.session.user;
-            const userId = req.session.userId;
-            const forumSubjectId = req.body.forumSubjectId;
-
-            console.log(req.body)
-
-            if(user) {
-                const threadTitle =  req.body.title;
-                const threadBody = req.body.comment;
-
-                db.models.forumThreads.create({
-                    threadTitle,
-                    originalComment: threadBody,
-                    originalPoster: user,
-                    userId,
-                    forumSubjectId
-                })
-                .then((insertedResult) => {
-                    console.log(insertedResult);
-                    res.send(insertedResult);
-                    res.end();
-                })
-                .catch((error) => {
-                    console.error(error);
-                    res.end();
-                })
-            }
-            else {
-                res.send("Not logged in.");
-                res.end();
-            }
-        });
-
-        app.post("/test", (req, res) => {
-            const user = req.session.user;
-            const userId = req.session.userId;
-
-            if(user) {
-                const userSubmittedComment = req.body.postComment;
-                const threadId = req.body.threadId;
-
-                db.models.forumPosts.create({
-                    postComment: userSubmittedComment,
-                    forumThreadId: threadId,
-                    status: "approved",
-                    userId
-                })
-                .then((insertedResult) => {
-                    console.log(insertedResult);
-                    res.send(insertedResult);
-                    res.end();
-                })
-                .catch((error) => {
-                    console.error(error);
-                    res.end();
-                })
-            }
-            /*
-            if(user) {
-                const threadTitle =  req.body.title;
-                const threadBody = req.body.comment;
-
-                db.models.forumThreads.create({
-                    threadTitle,
-                    originalComment: threadBody,
-                    forumSubjectId: 2,
-                    userId
-                })
-                .then((insertedResult) => {
-                    console.log(insertedResult);
-                    res.send(insertedResult);
-                    res.end();
-                })
-                .catch((error) => {
-                    console.error(error);
-                    res.end();
-                })
-            }
-            else {
-                res.send("Not logged in.");
-                res.end();
-            }
-            */
-        });
     }
 }
 
 
 export default AppRouter;
-
-//67433264

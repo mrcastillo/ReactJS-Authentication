@@ -1,13 +1,22 @@
 import React, { useState } from "react";
 import { Link, useHistory} from "react-router-dom";
-import { isEmail, validPassword, confirmPassword } from "../validators/JoiValidator";
+import { 
+    isEmail, 
+    validPassword, 
+    confirmPassword,
+    alphanumericUsername,
+    hasNumeric, //These will be used for password strength
+    hasUppercase,
+    hasLowercase,
+    hasNonAlphanumeric } from "../validators/JoiValidator";
 import _ from "lodash";
 import bcrypt from "bcryptjs";
 import axios from "axios";
 
 const Signup = () => {
     const history = useHistory();
-    //Set States for Signup Page
+    //Set States/Variables for Signup Page
+    const [username, setUsername] = useState(""); //username
     const [email, setEmail] = useState(""); //Email
     const [password, setPassword] = useState(""); //Password
     const [confirmedPassword, setConfirmedPassword] = useState(""); //Repeat Password
@@ -16,12 +25,54 @@ const Signup = () => {
         messages: []
     });
 
+    const handleUsernameInput = (e) => { //Update repeat password input
+        const currentUserInput = e.target.value;
+        setUsername(e.target.value.toLowerCase());
+
+        if(alphanumericUsername(currentUserInput).validated && currentUserInput.length > 2) {
+            e.target.className = "input-valid";
+        } else {
+            if(currentUserInput.length > 0) {
+                e.target.className = "input-invalid"
+            } else {
+                e.target.className = "input-pending";
+            }
+        }
+    };
+
     const handleEmailInput = (e) => { //Update email input
-        setEmail(e.target.value);
-    }
+        const currentUserInput = e.target.value; //Gets userInput from event.target.value
+        setEmail(currentUserInput); //Sets userinput into email state
+        
+        //Check if the email is validated using Joi Validator
+        if(isEmail(currentUserInput).validated) {
+            e.target.className = "input-valid"; //Sets target classname to input-valid(green border)
+        } else {
+            //Set border color based on input
+            if(currentUserInput.length > 0) {
+                e.target.className = "input-invalid";
+            }
+            else {
+                e.target.className = "input-pending";
+            }
+        }
+    };
 
     const handlePasswordInput = (e) => { //Update password input
-        setPassword(e.target.value);
+        const currentUserInput = e.target.value; //Gets userInput from event.target.value
+        setPassword(currentUserInput); //Sets userinput into email state
+       
+        if(validPassword(currentUserInput).validated) {
+            e.target.className = "input-valid";
+        }
+        else {
+            if(currentUserInput.length > 0) {
+                e.target.className = "input-invalid";
+            }
+            else {
+                e.target.className = "input-pending";
+            }
+        }
     }
 
     const handleConfirmedPasswordInput = (e) => { //Update repeat password input
@@ -31,21 +82,22 @@ const Signup = () => {
     //FORM SUBMITTION
     const handleSubmit = (e) => {
         e.preventDefault(); //Stops page refresh
+        const validUsername = alphanumericUsername(username); //Validate username
         const validEmail = isEmail(email); //validate email
         const isValidPassword = validPassword(password); //validate password 
-        const validRepeatPassword = confirmPassword(confirmedPassword); //validate repeat password
-        console.log(validEmail)
-        if(!validEmail.validated || !isValidPassword.validated || validRepeatPassword.validated) {
-            
+        const validRepeatPassword = confirmPassword(password, confirmedPassword); //validate repeat password
+        
+        if(!validUsername.validated || !validEmail.validated || !isValidPassword.validated || !validRepeatPassword.validated) {
+            if(validEmail.error) setEmail("");
+            if(isValidPassword.error) setPassword("");
+            setConfirmedPassword("");
+
             //Create error array that will list the validation errors.
             const allErrors = [
-                validEmail.errors,
-                isValidPassword.errors,
-                validRepeatPassword.errors
-            ]
-            setEmail("");
-            setPassword("");
-            setConfirmedPassword("");
+                validEmail.error,
+                isValidPassword.error,
+                validRepeatPassword.error
+            ];
 
             setFormErrors({
                 errors: true,
@@ -66,6 +118,7 @@ const Signup = () => {
                     };
                     
                     axios.post("http://localhost:8080/forum/signup", {
+                        username,
                         email,
                         password: hash
                     })
@@ -97,7 +150,7 @@ const Signup = () => {
                 });
             })
         }
-    }
+    };
 
     //Form Error
     function FormErrorsElement() {
@@ -126,23 +179,28 @@ const Signup = () => {
     function SuccessfulSignUp() {
         history.push("/");
     };
-
+    
     return ( 
-        <div className={"login"}>
+        <div className={"signup-page"}>
             <h1>Create a New Account.</h1>
             <p>Or <Link to={"/login"}>Login</Link></p>
 
             <FormErrorsElement />
             <div>
                 <form method={"POST"} onSubmit={handleSubmit}>
-                    <label>Email/Username</label>
-                    <input type={"text"} value={email} onChange={handleEmailInput} required/>
+
+                    <label htmlFor={"email"}>Email</label>
+                    <input type={"text"} id={"email"} value={email} onChange={handleEmailInput} required/>
+
+                    <label htmlFor={"username"}>Username</label>
+                    <input type={"text"} id={"username"} value={username} onChange={handleUsernameInput} required />
 
                     <label>Password</label>
-                    <input type={"text"} value={password} onChange={handlePasswordInput} required/>
+                    <input type={"password"} value={password} onChange={handlePasswordInput} required/>
                     
                     <label>Confirm Password</label>
-                    <input type={"text"} value={confirmedPassword} onChange={handleConfirmedPasswordInput} required/>
+                    <input type={"password"} value={confirmedPassword} onChange={handleConfirmedPasswordInput} required/>
+                    
                     <br/>
 
                     <input type={"submit"} value={"Create Account"}/>
@@ -153,32 +211,3 @@ const Signup = () => {
 }
  
 export default Signup;
-/*
-const signupPost = async (hash) => {
-    try {
-        const result = await axios.post("http://localhost:8080/forum/signup", {
-            email,
-            password: hash
-        });
-        if(result.data){
-            SuccessfulSignUp();
-        }
-        else {
-            setFormErrors({
-                errors: true,
-                messages: ["There was a signup error."]
-            });
-        }
-        console.log("We made the signup request", result)
-    } catch (err) {
-        console.error("Error with signup request", err);
-    } finally {
-        setEmail("");
-        setPassword("");
-        setConfirmedPassword("");
-        return;
-    }
-};
-*/
-
-

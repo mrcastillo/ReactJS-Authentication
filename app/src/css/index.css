@@ -53,8 +53,37 @@ a {
       display: block; }
     .app-container .login div form input {
       margin: 1em 0em 1em 0em; }
-  .app-container .signup {
+    .app-container .login div form #email {
+      border: 1px solid red; }
+    .app-container .login div form #email:focus {
+      border: 5px solid purple; }
+  .app-container .signup-page {
     text-align: center; }
+    .app-container .signup-page div form label {
+      display: block;
+      font-weight: 900; }
+    .app-container .signup-page div form input {
+      margin: 1em 0em .5em 0em;
+      border: 1px solid black;
+      outline: none; }
+    .app-container .signup-page div form .input-valid {
+      border: 1px solid green; }
+    .app-container .signup-page div form .input-pending {
+      border: 1px solid black; }
+    .app-container .signup-page div form .input-invalid {
+      border: 1px solid red; }
+    .app-container .signup-page div form .input-invalid:focus {
+      border: 1px solid red;
+      outline: none; }
+  .app-container .input-valid {
+    border: 2px solid green; }
+  .app-container .input-pending {
+    border: 1px solid black; }
+  .app-container .input-invalid {
+    border: 1px solid red; }
+  .app-container .input-invalid:focus {
+    border: 1px solid red;
+    outline: none; }
   .app-container .form-errors {
     color: red; }
   .app-container .account .change-password {

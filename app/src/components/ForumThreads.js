@@ -61,7 +61,7 @@ const ForumThreads = (props) => {
         else { //Threads have not been returned or no threads
             return (
                 <tr>
-                    <td>Loading...</td>
+                    <td>Threads Unavailable</td>
                 </tr>
             )
         }
