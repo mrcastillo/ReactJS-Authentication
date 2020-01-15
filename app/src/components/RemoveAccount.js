@@ -45,7 +45,7 @@ const RemoveAccount = () => {
             setConfirmedPassword("");
         }
         else {
-            axios.post("http://localhost:8080/forum/account/delete", {
+            axios.post("http://localhost:8080/account/delete", {
                 password
             })
             .then((serverReply) => {

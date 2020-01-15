@@ -117,7 +117,7 @@ const Signup = () => {
                         return;
                     };
                     
-                    axios.post("http://localhost:8080/forum/signup", {
+                    axios.post("http://localhost:8080/account/signup", {
                         username,
                         email,
                         password: hash

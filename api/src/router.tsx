@@ -5,13 +5,14 @@ import { isEmail, alphanumericUsername, validPassword } from "./validations/JoiV
 
 
 interface sessionInterface {
-    user?: string,
-    serverReplied?: boolean,
+    user: string,
     error?: any
 };
-interface regularResponse {
-    data: object,
-    error: object
+
+interface standardResponse {
+    message?: Array<string>,
+    error?: Array<string>,
+    payload?: any
 }
 
 class AppRouter {
@@ -30,8 +31,8 @@ class AppRouter {
         //Checks the user session and returns the session
         app.get("/forum/session", (req, res) => {
             const userSession: sessionInterface = {
-                serverReplied: true,
-                user: req.session.user ? req.session.user : ""
+                user: req.session.user ? req.session.user : "",
+                error: null
             };
             res.send(userSession); res.end();
         });
@@ -40,6 +41,7 @@ class AppRouter {
         app.get("/forum", async (req, res) => {
             try {
                 const categories = await db.models.forumSubjects.findAll();
+    
                 res.send(categories); res.end();
             } catch (e) {
                 res.status(500).send(null); res.end();
@@ -186,7 +188,7 @@ class AppRouter {
             }
 
             try {
-                await store.destroy();
+                await store.destroy(req.sessionID);
                 await req.session.destroy();
                 res.send({ serverReplied: true, user: "" });
                 res.end();
@@ -218,45 +220,13 @@ class AppRouter {
                     password: req.body.password,
                     role: 1
                 });
-
+                
+                res.send(true); res.end();
+                
             } catch (e) {
                 console.error(e);
-                res.status(500).send(null);
+                res.status(500).send(null); res.end()
             }
-        };
-
-        app.post("/forum/signup", (req, res) => {
-            const userPostedData =  req.body;
-
-            db.models.user.create({
-                username: userPostedData.username.toLowerCase(),
-                email: userPostedData.email,
-                password: userPostedData.password,
-                role: 1
-            })
-            .then(() => {
-                console.log("User Created!");
-                res.send(true);
-                res.end()
-            })
-            .catch((err) => {
-                const errorCode = err.parent.errno;
-                var errorMsg = [];
-                switch(errorCode) {
-                    case 1062:
-                        let validationPathError = err.errors[0].path;
-                        validationPathError = validationPathError[0].toUpperCase() + validationPathError.slice(1);
-                        errorMsg.push(`${validationPathError} is already in use.`)
-                        break;
-                        default:
-                            errorMsg.push("There was an internal server error.");
-                }
-
-                res.send({
-                    errors: errorMsg
-                }as sessionInterface);
-                res.end();
-            })
         });
 
         //Need to perform validation on the backend.
@@ -309,92 +279,58 @@ class AppRouter {
             }
         });
 
-        app.post("/forum/account/delete", (req, res) => {
-        //const user = req.session.user;
-        const user  = req.session.user;
-        const userSubmittedPasssword = req.body.password;
-        
-        db.models.user.findOne({
-            where: {
-                email: user
+        app.post("/account/delete", async (req, res) => { 
+            if(!req.session.user) {
+                res.status(500).send(null);
+                res.end(); return;
             }
-        })
-        .then((queryResult) => {
-            if(queryResult){
-                const userPassword = queryResult.dataValues.password;
-                bcrypt.compare(userSubmittedPasssword, userPassword, (err, passwordsMatch) => {
-                    if(err) {
-                        throw err;
-                    }
-                    if(passwordsMatch) {
-                        store.destroy(req.sessionID, (err) => {
-                            if(err) {
-                                console.error("Unable to destroy redis session\n", err);
-                                res.send({
-                                    errors: true,
-                                    messages: ["Unable to destroy redis session"]
-                                });
-                                res.end();
-                            };
-                            req.session.destroy((err) => {
-                                if(err) {
-                                    console.error("Unable to destroy express session.\n", err);
-                                    res.send({
-                                        errors: true,
-                                        messages: ["Unable to destroy express session"]
-                                    });
-                                    res.end();  
-                                }
-                                
-                                db.models.user.destroy({
-                                    where: {
-                                        email: user
-                                    },
-                                    limit: 1
-                                })
-                                .then((userDestroyed) => {
-                                    if(userDestroyed > 0) {
-                                        res.send({
-                                            errors: false,
-                                            messages: ["We have removed the user!"]
-                                        }).
-                                        res.end();
-                                    }
-                                    else {
-                                        res.send({
-                                            errors: true,
-                                            messages: ["We have not removed any user.."]
-                                        })
-                                        res.end();
-                                    }
-                                })
-                                .catch((err) => {
-                                    throw err;
-                                    res.send("there was an error");
-                                    res.end();
-                                })
-                            });
-                        });
-                        
-                    }
-                    else {
-                        res.send({
-                            errors: true,
-                            messages: ["Passwords didnt match"]
-                        });
-                        res.end();
+
+            const isPasswordValid = validPassword(req.body.password).validated;
+
+            if(!isPasswordValid) {
+                res.status(500).send(null);
+                res.end(); return;
+            };
+
+            try {
+                const findUser = await db.models.user.findOne({
+                    where: {
+                        username: req.session.user
                     }
                 });
+
+                const userDBPassword = findUser.password;
+
+                const checkPassword = await bcrypt.compare(req.body.password, userDBPassword);
+                
+                if(checkPassword) {
+
+                    await db.models.user.destroy({
+                        where: {
+                            username: req.session.user
+                        },
+                        limit: 1
+                    });
+
+                    await req.session.destroy();
+                    await store.destroy(req.sessionID);
+                
+                    res.send({
+                        errors: false,
+                        messages: ["We have removed the user!"]
+                    });
+                    res.end();
+                } else {
+
+                }
+                console.log(findUser);
+                res.send(findUser);
+                res.end();
+            } catch (e) {
+                console.error(e);
+                res.status(500).send(null);
+                res.end(); return;
             }
-            else {
-                //USER NOT FOUND
-                console.error("THERE IS NO USER RETURNED")
-            }
-        })
-        .catch((err) => {
-                //ERROR ON FINDONE QUERY
-                console.error(err);
-            })
         });
     }
 }

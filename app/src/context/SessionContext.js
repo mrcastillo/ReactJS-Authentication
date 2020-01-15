@@ -8,14 +8,9 @@ axios.defaults.withCredentials = true;
 export const SessionContext = createContext();
 
 const SessionContextProvider = (props) => {
-    const [session, dispatch] = useReducer(sessionReducer, {
-        serverReplied: false,
-        user: ""
-    });
-
+    const [session, dispatch] = useReducer(sessionReducer, {user: ""});
 
     //When the application loads, perform axios request to server
-    //Then dispatch what the server replied to our session.
     useEffect(() => {
         sessionStatus(dispatch);
         console.log("SessionContext Component rendered.");
@@ -23,7 +18,7 @@ const SessionContextProvider = (props) => {
 
     return(
         <SessionContext.Provider value={{session, dispatch}}>
-            { session.serverReplied ? props.children : <div>Loading...</div> }
+            { props.children }
         </SessionContext.Provider>
     )
 }

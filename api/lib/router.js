@@ -41,8 +41,8 @@ function () {
 
       app.get("/forum/session", function (req, res) {
         var userSession = {
-          serverReplied: true,
-          user: req.session.user ? req.session.user : ""
+          user: req.session.user ? req.session.user : "",
+          error: null
         };
         res.send(userSession);
         res.end();
@@ -334,7 +334,7 @@ function () {
               case 4:
                 _context6.prev = 4;
                 _context6.next = 7;
-                return _regenerator["default"].awrap(store.destroy());
+                return _regenerator["default"].awrap(store.destroy(req.sessionID));
 
               case 7:
                 _context6.next = 9;
@@ -366,58 +366,76 @@ function () {
           }
         }, null, null, [[4, 13]]);
       });
-      app.post("/forum/signup", function (req, res) {
-        var userPostedData = req.body;
-        db.models.user.create({
-          username: userPostedData.username.toLowerCase(),
-          email: userPostedData.email,
-          password: userPostedData.password,
-          role: 1
-        }).then(function () {
-          console.log("User Created!");
-          res.send(true);
-          res.end();
-        })["catch"](function (err) {
-          var errorCode = err.parent.errno;
-          var errorMsg = [];
-
-          switch (errorCode) {
-            case 1062:
-              var validationPathError = err.errors[0].path;
-              validationPathError = validationPathError[0].toUpperCase() + validationPathError.slice(1);
-              errorMsg.push("".concat(validationPathError, " is already in use."));
-              break;
-
-            default:
-              errorMsg.push("There was an internal server error.");
-          }
-
-          res.send({
-            errors: errorMsg
-          });
-          res.end();
-        });
-      }); //Need to perform validation on the backend.
-
-      app.post("/forum/account/changepassword", function _callee7(req, res) {
-        var submittedPassword, submittedNewPassword, userFromDB, areDBandNewPasswordSame, doPasswordsMatch, bcryptSalt, bcryptHash, updateUserPassword;
+      app.post("/account/signup", function _callee7(req, res) {
+        var validUsername, validEmail, isValidPassword, createUser;
         return _regenerator["default"].async(function _callee7$(_context7) {
           while (1) {
             switch (_context7.prev = _context7.next) {
               case 0:
-                if (req.session.user) {
+                if (!req.session.user) {
                   _context7.next = 3;
                   break;
                 }
 
-                res.status(500).send("Unavailable.");
+                res.status(500).send(null);
                 return _context7.abrupt("return");
+
+              case 3:
+                validUsername = (0, _JoiValidator.alphanumericUsername)(req.body.username).validated;
+                validEmail = (0, _JoiValidator.isEmail)(req.body.email).validated;
+                isValidPassword = (0, _JoiValidator.validPassword)(req.body.password);
+
+                if (!(!validUsername || !validEmail || !isValidPassword)) {
+                  _context7.next = 9;
+                  break;
+                }
+
+                res.status(500).send(null);
+                return _context7.abrupt("return");
+
+              case 9:
+                try {
+                  createUser = db.models.user.create({
+                    username: req.body.username.toLowerCase(),
+                    email: req.body.email,
+                    password: req.body.password,
+                    role: 1
+                  });
+                  res.send(true);
+                  res.end();
+                } catch (e) {
+                  console.error(e);
+                  res.status(500).send(null);
+                  res.end();
+                }
+
+              case 10:
+              case "end":
+                return _context7.stop();
+            }
+          }
+        });
+      }); //Need to perform validation on the backend.
+
+      app.post("/forum/account/changepassword", function _callee8(req, res) {
+        var submittedPassword, submittedNewPassword, userFromDB, areDBandNewPasswordSame, doPasswordsMatch, bcryptSalt, bcryptHash, updateUserPassword;
+        return _regenerator["default"].async(function _callee8$(_context8) {
+          while (1) {
+            switch (_context8.prev = _context8.next) {
+              case 0:
+                if (req.session.user) {
+                  _context8.next = 3;
+                  break;
+                }
+
+                res.status(500).send("Unavailable.");
+                return _context8.abrupt("return");
 
               case 3:
                 submittedPassword = req.body.password;
                 submittedNewPassword = req.body.newPassword; //Return the user object from the DB, NULL if not found
 
-                _context7.next = 7;
+                _context8.next = 7;
                 return _regenerator["default"].awrap(db.models.user.findOne({
                   where: {
                     username: "peach"
@@ -425,21 +443,21 @@ function () {
                 }));
 
               case 7:
-                userFromDB = _context7.sent;
+                userFromDB = _context8.sent;
 
                 if (!userFromDB) {
-                  _context7.next = 37;
+                  _context8.next = 37;
                   break;
                 }
 
-                _context7.next = 11;
+                _context8.next = 11;
                 return _regenerator["default"].awrap(_bcryptjs["default"].compare(submittedNewPassword, userFromDB.password));
 
               case 11:
-                areDBandNewPasswordSame = _context7.sent;
+                areDBandNewPasswordSame = _context8.sent;
 
                 if (!areDBandNewPasswordSame) {
-                  _context7.next = 16;
+                  _context8.next = 16;
                   break;
                 }
 
@@ -447,34 +465,34 @@ function () {
                   errors: ["New Password cannot be the same as old password."]
                 });
                 res.end();
-                return _context7.abrupt("return");
+                return _context8.abrupt("return");
 
               case 16:
                 console.log(userFromDB.password, submittedPassword); //Check if the actual passwords matches that in the DB
 
-                _context7.next = 19;
+                _context8.next = 19;
                 return _regenerator["default"].awrap(_bcryptjs["default"].compare(submittedPassword, userFromDB.password));
 
               case 19:
-                doPasswordsMatch = _context7.sent;
+                doPasswordsMatch = _context8.sent;
                 console.log(doPasswordsMatch);
 
                 if (!doPasswordsMatch) {
-                  _context7.next = 35;
+                  _context8.next = 35;
                   break;
                 }
 
-                _context7.next = 24;
+                _context8.next = 24;
                 return _regenerator["default"].awrap(_bcryptjs["default"].genSalt(10));
 
               case 24:
-                bcryptSalt = _context7.sent;
-                _context7.next = 27;
+                bcryptSalt = _context8.sent;
+                _context8.next = 27;
                 return _regenerator["default"].awrap(_bcryptjs["default"].hash(submittedNewPassword, bcryptSalt));
 
               case 27:
-                bcryptHash = _context7.sent;
-                _context7.next = 30;
+                bcryptHash = _context8.sent;
+                _context8.next = 30;
                 return _regenerator["default"].awrap(db.models.user.update({
                   password: bcryptHash
                 }, {
@@ -484,10 +502,10 @@ function () {
                 }));
 
               case 30:
-                updateUserPassword = _context7.sent;
+                updateUserPassword = _context8.sent;
                 res.send(updateUserPassword);
                 res.end();
-                _context7.next = 37;
+                _context8.next = 37;
                 break;
 
               case 35:
@@ -498,91 +516,108 @@ function () {
 
               case 37:
               case "end":
-                return _context7.stop();
+                return _context8.stop();
             }
           }
         });
       });
-      app.post("/forum/account/delete", function (req, res) {
-        //const user = req.session.user;
-        var user = req.session.user;
-        var userSubmittedPasssword = req.body.password;
-        db.models.user.findOne({
-          where: {
-            email: user
-          }
-        }).then(function (queryResult) {
-          if (queryResult) {
-            var userPassword = queryResult.dataValues.password;
+      app.post("/account/delete", function _callee9(req, res) {
+        var isPasswordValid, findUser, userDBPassword, checkPassword;
+        return _regenerator["default"].async(function _callee9$(_context9) {
+          while (1) {
+            switch (_context9.prev = _context9.next) {
+              case 0:
+                if (req.session.user) {
+                  _context9.next = 4;
+                  break;
+                }
 
-            _bcryptjs["default"].compare(userSubmittedPasssword, userPassword, function (err, passwordsMatch) {
-              if (err) {
-                throw err;
-              }
+                res.status(500).send(null);
+                res.end();
+                return _context9.abrupt("return");
 
-              if (passwordsMatch) {
-                store.destroy(req.sessionID, function (err) {
-                  if (err) {
-                    console.error("Unable to destroy redis session\n", err);
-                    res.send({
-                      errors: true,
-                      messages: ["Unable to destroy redis session"]
-                    });
-                    res.end();
+              case 4:
+                isPasswordValid = (0, _JoiValidator.validPassword)(req.body.password).validated;
+
+                if (isPasswordValid) {
+                  _context9.next = 9;
+                  break;
+                }
+
+                res.status(500).send(null);
+                res.end();
+                return _context9.abrupt("return");
+
+              case 9:
+                ;
+                _context9.prev = 10;
+                _context9.next = 13;
+                return _regenerator["default"].awrap(db.models.user.findOne({
+                  where: {
+                    username: req.session.user
                   }
+                }));
 
-                  ;
-                  req.session.destroy(function (err) {
-                    if (err) {
-                      console.error("Unable to destroy express session.\n", err);
-                      res.send({
-                        errors: true,
-                        messages: ["Unable to destroy express session"]
-                      });
-                      res.end();
-                    }
+              case 13:
+                findUser = _context9.sent;
+                userDBPassword = findUser.password;
+                _context9.next = 17;
+                return _regenerator["default"].awrap(_bcryptjs["default"].compare(req.body.password, userDBPassword));
 
-                    db.models.user.destroy({
-                      where: {
-                        email: user
-                      },
-                      limit: 1
-                    }).then(function (userDestroyed) {
-                      if (userDestroyed > 0) {
-                        res.send({
-                          errors: false,
-                          messages: ["We have removed the user!"]
-                        }).res.end();
-                      } else {
-                        res.send({
-                          errors: true,
-                          messages: ["We have not removed any user.."]
-                        });
-                        res.end();
-                      }
-                    })["catch"](function (err) {
-                      throw err;
-                      res.send("there was an error");
-                      res.end();
-                    });
-                  });
-                });
-              } else {
+              case 17:
+                checkPassword = _context9.sent;
+
+                if (!checkPassword) {
+                  _context9.next = 29;
+                  break;
+                }
+
+                _context9.next = 21;
+                return _regenerator["default"].awrap(db.models.user.destroy({
+                  where: {
+                    username: req.session.user
+                  },
+                  limit: 1
+                }));
+
+              case 21:
+                _context9.next = 23;
+                return _regenerator["default"].awrap(req.session.destroy());
+
+              case 23:
+                _context9.next = 25;
+                return _regenerator["default"].awrap(store.destroy(req.sessionID));
+
+              case 25:
                 res.send({
-                  errors: true,
-                  messages: ["Passwords didnt match"]
+                  errors: false,
+                  messages: ["We have removed the user!"]
                 });
                 res.end();
-              }
-            });
-          } else {
-            //USER NOT FOUND
-            console.error("THERE IS NO USER RETURNED");
+                _context9.next = 29;
+                break;
+
+              case 29:
+                console.log(findUser);
+                res.send(findUser);
+                res.end();
+                _context9.next = 40;
+                break;
+
+              case 34:
+                _context9.prev = 34;
+                _context9.t0 = _context9["catch"](10);
+                console.error(_context9.t0);
+                res.status(500).send(null);
+                res.end();
+                return _context9.abrupt("return");
+
+              case 40:
+              case "end":
+                return _context9.stop();
+            }
           }
-        })["catch"](function (err) {
-          //ERROR ON FINDONE QUERY
-          console.error(err);
-        });
+        }, null, null, [[10, 34]]);
       });
     }
   }]);
