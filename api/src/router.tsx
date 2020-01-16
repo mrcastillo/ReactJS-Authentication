@@ -130,7 +130,7 @@ class AppRouter {
         });
 
         app.post("/forum/login", async (req, res) => {
-            if(req.session.user)
+            if(req.session.user) //Check if we have a user in session already
             {
                 res.status(500).send("Unavailable");
                 res.end();
@@ -140,20 +140,27 @@ class AppRouter {
             //Get post variables from user
             const userSubmittedEmail = req.body.email;
             const userSubmittedPassword = req.body.password;
-            
+            //Validation Booleans
             const emailValidation = isEmail(userSubmittedEmail).validated;
             const usernameValidation = alphanumericUsername(userSubmittedEmail).validated;
             const passwordValidation = validPassword(userSubmittedPassword).validated;
             
-            if((emailValidation || usernameValidation) && passwordValidation) {
-
-                try {
+            //Check if email or username is validated and true, and if password validation is true
+            if((emailValidation || usernameValidation) && passwordValidation) { 
+                try { //Try to find a user from the database
+                    //Returns user or NULL if not found
                     const userFromDB = await db.models.user.findOne({
                         where: {
                             [db.Op.or]: [{email: userSubmittedEmail}, {username: userSubmittedEmail}]
                         }
                     });
 
+                    //Can also change this to username not found
+                    if(!userFromDB){ 
+                        res.send({error: ["Invalid Email/Username or Pasword."]});
+                        res.end();
+                        return;
+                    }
                     //Checks to see if submittedpassword matches with db password.
                     const passwordMatch = await bcrypt.compare(userSubmittedPassword, userFromDB.dataValues.password); 
                     
@@ -167,15 +174,15 @@ class AppRouter {
                         res.send({user: req.session.user}); res.end();
                     } //Password Dont match
                     else {
-                        res.send({ errors: ["Invalid Password."]}); res.end();
+                        res.send({ error: ["Invalid Password."]}); res.end();
                     }
                 } catch(e) {
                     console.error(e);
-                    res.send({errors: ["Invalid Email/Username or Pasword."]});
+                    res.send({error: ["Invalid Email/Username or Pasword."]});
                     res.end();
                 }
             } else {
-                res.send({errors: ["Invalid Email/Username or Pasword."]});
+                res.send({error: ["Invalid Email/Username or Pasword."]});
                 res.end();
             }
         });
@@ -201,31 +208,49 @@ class AppRouter {
 
         app.post("/account/signup", async (req, res) => {
             if(req.session.user){
-                res.status(500).send(null);
+                res.status(500).send(null); res.end();
                 return;
             }
-            const validUsername = alphanumericUsername(req.body.username).validated;
-            const validEmail = isEmail(req.body.email).validated;
-            const isValidPassword =  validPassword(req.body.password);
+            //Declare our variables
+            const userEmail = req.body.email;
+            const userUsername = req.body.username.toLowerCase();
+            const userPassword = req.body.password;
+
+            //Check if our user inputs are validated
+            const validEmail = isEmail(userEmail).validated;
+            const validUsername = alphanumericUsername(userUsername).validated;
+            const isValidPassword =  validPassword(userPassword).validated;
 
             if(!validUsername || !validEmail || !isValidPassword) {
-                res.status(500).send(null);
+                res.status(500).send(null); res.end();
                 return;
             }
 
+            const bcryptSalt = await bcrypt.genSalt(10);
+            const userHashedPassword = await bcrypt.hash(userPassword, bcryptSalt);
+
             try {
-                const createUser = db.models.user.create({
-                    username: req.body.username.toLowerCase(),
-                    email: req.body.email,
-                    password: req.body.password,
+                const createUser = await db.models.user.create({
+                    email: userEmail,
+                    username: userUsername,
+                    password: userHashedPassword,
                     role: 1
                 });
-                
-                res.send(true); res.end();
+                console.log(createUser);
+                res.send({
+                    error: false,
+                    message: true
+                }); res.end(); return;
                 
             } catch (e) {
                 console.error(e);
-                res.status(500).send(null); res.end()
+                if(e.parent.errno === 1062) {
+                    const errorPath = e.errors[0].path.charAt(0).toUpperCase() + e.errors[0].path.slice(1);
+                    res.send({error: true, message: [`${errorPath} already exist.`]});
+                    res.end(); return;
+                }
+                
+                res.status(500).send(null); res.end(); return;
             }
         });
 
@@ -300,32 +325,39 @@ class AppRouter {
                 });
 
                 const userDBPassword = findUser.password;
-
                 const checkPassword = await bcrypt.compare(req.body.password, userDBPassword);
                 
                 if(checkPassword) {
-
-                    await db.models.user.destroy({
+                    const didUserGetRemoved = await db.models.user.destroy({
                         where: {
                             username: req.session.user
                         },
                         limit: 1
                     });
+                    
+                    if(didUserGetRemoved === 0) {
+                        res.send({
+                            error: true,
+                            message: ["Unable to remove user. Please try again later or Contact an Administrator."]
+                        });
+                        res.end(); return;
+                    };
 
                     await req.session.destroy();
                     await store.destroy(req.sessionID);
-                
+                    
                     res.send({
-                        errors: false,
-                        messages: ["We have removed the user!"]
+                        error: false,
+                        message: ["We have removed the user!"]
                     });
-                    res.end();
+                    res.end(); return;
                 } else {
-
+                    res.send({
+                        error: true,
+                        message: ["You have entered an invalid password."]
+                    })
+                    res.end(); return;
                 }
-                console.log(findUser);
-                res.send(findUser);
-                res.end();
             } catch (e) {
                 console.error(e);
                 res.status(500).send(null);

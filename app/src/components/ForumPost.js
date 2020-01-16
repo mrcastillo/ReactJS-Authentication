@@ -77,5 +77,3 @@ const ForumPost = (props) => {
 }
  
 export default ForumPost;
-
-//<Link to={`/forum/${trimLowerCase(subject)}/${threadId}/post`}>New Post</Link>

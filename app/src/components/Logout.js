@@ -10,6 +10,7 @@ export const Logout = () => {
     const { dispatch } = useContext(SessionContext);
     
     useEffect(() => {
+        
         sessionDestroy(dispatch);
     });
 

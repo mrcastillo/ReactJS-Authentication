@@ -10,7 +10,6 @@ import {
     hasLowercase,
     hasNonAlphanumeric } from "../validators/JoiValidator";
 import _ from "lodash";
-import bcrypt from "bcryptjs";
 import axios from "axios";
 
 const Signup = () => {
@@ -20,9 +19,9 @@ const Signup = () => {
     const [email, setEmail] = useState(""); //Email
     const [password, setPassword] = useState(""); //Password
     const [confirmedPassword, setConfirmedPassword] = useState(""); //Repeat Password
-    const [formErrors, setFormErrors] = useState({ //Form Errors 
-        errors: false,
-        messages: []
+    const [formError, setFormErrors] = useState({ //Form Errors 
+        error: false,
+        message: []
     });
 
     const handleUsernameInput = (e) => { //Update repeat password input
@@ -80,75 +79,38 @@ const Signup = () => {
     }
 
     //FORM SUBMITTION
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault(); //Stops page refresh
-        const validUsername = alphanumericUsername(username); //Validate username
+        setFormErrors({error: false});
         const validEmail = isEmail(email); //validate email
+        const validUsername = alphanumericUsername(username); //Validate username
         const isValidPassword = validPassword(password); //validate password 
-        const validRepeatPassword = confirmPassword(password, confirmedPassword); //validate repeat password
+        const validConfirmedPassword = confirmPassword(password, confirmedPassword); //validate repeat password
         
-        if(!validUsername.validated || !validEmail.validated || !isValidPassword.validated || !validRepeatPassword.validated) {
-            if(validEmail.error) setEmail("");
-            if(isValidPassword.error) setPassword("");
-            setConfirmedPassword("");
+        const validations = [validEmail, validUsername, isValidPassword, validConfirmedPassword];
 
-            //Create error array that will list the validation errors.
-            const allErrors = [
-                validEmail.error,
-                isValidPassword.error,
-                validRepeatPassword.error
-            ];
+        const validationError = _.find(validations, (validation) => {
+            return validation.error;
+        });
 
-            setFormErrors({
-                errors: true,
-                messages: allErrors
+        if(!validationError) {
+            let signUpRequest = await axios.post("http://localhost:8080/account/signup", {
+                email, username, password
             });
+
+            signUpRequest = signUpRequest.data;
+
+            if(!signUpRequest.error) {
+                history.push("/login");
+                return;
+            } else {
+                setFormErrors({error: signUpRequest.error, message: signUpRequest.message })
+                return;
+            }
+        } else {
+            setFormErrors({error: true, message: [validationError.error]});
+            setPassword(""); setConfirmedPassword("");
             return;
-        }
-        else {
-            bcrypt.genSalt(10, (err, salt) => {
-                if(err){
-                    console.error(err);
-                    return;
-                };
-                bcrypt.hash(password, salt, (err, hash) => {
-                    if(err) {
-                        console.error(err);
-                        return;
-                    };
-                    
-                    axios.post("http://localhost:8080/account/signup", {
-                        username,
-                        email,
-                        password: hash
-                    })
-                    .then((signupResult) => {
-                        signupResult = signupResult.data;
-                        if(signupResult.errors) {
-                            setFormErrors({
-                                errors: true,
-                                messages: signupResult.errors
-                            });
-                            setEmail("");
-                            setPassword("");
-                            setConfirmedPassword("");
-                        }
-                        else {
-                            history.push("/");
-                        }
-                    })
-                    .catch((err) => {
-                        setFormErrors({
-                            errors: true,
-                            messages: ["There was an internal server error."]
-                        });
-                        setEmail("");
-                        setPassword("");
-                        setConfirmedPassword("");
-                        return;
-                    });
-                });
-            })
         }
     };
 
@@ -156,8 +118,8 @@ const Signup = () => {
     function FormErrorsElement() {
         const formErrorsElement = [];
 
-        if(formErrors.errors) {
-            _.each(formErrors.messages, (message, key) => {
+        if(formError.error) {
+            _.each(formError.message, (message, key) => {
                 formErrorsElement.push(
                     <div className={"form-error"} key={key}>
                         {message}
@@ -190,16 +152,16 @@ const Signup = () => {
                 <form method={"POST"} onSubmit={handleSubmit}>
 
                     <label htmlFor={"email"}>Email</label>
-                    <input type={"text"} id={"email"} value={email} onChange={handleEmailInput} required/>
+                    <input type={"text"} id={"email"} value={email} onChange={handleEmailInput}/>
 
                     <label htmlFor={"username"}>Username</label>
-                    <input type={"text"} id={"username"} value={username} onChange={handleUsernameInput} required />
+                    <input type={"text"} id={"username"} value={username} onChange={handleUsernameInput} />
 
                     <label>Password</label>
-                    <input type={"password"} value={password} onChange={handlePasswordInput} required/>
+                    <input type={"password"} value={password} onChange={handlePasswordInput}/>
                     
                     <label>Confirm Password</label>
-                    <input type={"password"} value={confirmedPassword} onChange={handleConfirmedPasswordInput} required/>
+                    <input type={"password"} value={confirmedPassword} onChange={handleConfirmedPasswordInput}/>
                     
                     <br/>
 

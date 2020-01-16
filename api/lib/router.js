@@ -240,13 +240,14 @@ function () {
               case 4:
                 //Get post variables from user
                 userSubmittedEmail = req.body.email;
-                userSubmittedPassword = req.body.password;
+                userSubmittedPassword = req.body.password; //Validation Booleans
+
                 emailValidation = (0, _JoiValidator.isEmail)(userSubmittedEmail).validated;
                 usernameValidation = (0, _JoiValidator.alphanumericUsername)(userSubmittedEmail).validated;
-                passwordValidation = (0, _JoiValidator.validPassword)(userSubmittedPassword).validated;
+                passwordValidation = (0, _JoiValidator.validPassword)(userSubmittedPassword).validated; //Check if email or username is validated and true, and if password validation is true
 
                 if (!((emailValidation || usernameValidation) && passwordValidation)) {
-                  _context5.next = 27;
+                  _context5.next = 31;
                   break;
                 }
 
@@ -262,10 +263,23 @@ function () {
 
               case 13:
                 userFromDB = _context5.sent;
-                _context5.next = 16;
+
+                if (userFromDB) {
+                  _context5.next = 18;
+                  break;
+                }
+
+                res.send({
+                  error: ["Invalid Email/Username or Pasword."]
+                });
+                res.end();
+                return _context5.abrupt("return");
+
+              case 18:
+                _context5.next = 20;
                 return _regenerator["default"].awrap(_bcryptjs["default"].compare(userSubmittedPassword, userFromDB.dataValues.password));
 
-              case 16:
+              case 20:
                 passwordMatch = _context5.sent;
 
                 if (passwordMatch === true) {
@@ -283,39 +297,39 @@ function () {
                 } //Password Dont match
                 else {
                     res.send({
-                      errors: ["Invalid Password."]
+                      error: ["Invalid Password."]
                     });
                     res.end();
                   }
 
-                _context5.next = 25;
-                break;
-
-              case 20:
-                _context5.prev = 20;
-                _context5.t0 = _context5["catch"](10);
-                console.error(_context5.t0);
-                res.send({
-                  errors: ["Invalid Email/Username or Pasword."]
-                });
-                res.end();
-
-              case 25:
                 _context5.next = 29;
                 break;
 
-              case 27:
+              case 24:
+                _context5.prev = 24;
+                _context5.t0 = _context5["catch"](10);
+                console.error(_context5.t0);
                 res.send({
-                  errors: ["Invalid Email/Username or Pasword."]
+                  error: ["Invalid Email/Username or Pasword."]
                 });
                 res.end();
 
               case 29:
+                _context5.next = 33;
+                break;
+
+              case 31:
+                res.send({
+                  error: ["Invalid Email/Username or Pasword."]
+                });
+                res.end();
+
+              case 33:
               case "end":
                 return _context5.stop();
             }
           }
-        }, null, null, [[10, 20]]);
+        }, null, null, [[10, 24]]);
       });
       app.get("/account/logout", function _callee6(req, res) {
         return _regenerator["default"].async(function _callee6$(_context6) {
@@ -367,54 +381,98 @@ function () {
         }, null, null, [[4, 13]]);
       });
       app.post("/account/signup", function _callee7(req, res) {
-        var validUsername, validEmail, isValidPassword, createUser;
+        var userEmail, userUsername, userPassword, validEmail, validUsername, isValidPassword, bcryptSalt, userHashedPassword, createUser, errorPath;
         return _regenerator["default"].async(function _callee7$(_context7) {
           while (1) {
             switch (_context7.prev = _context7.next) {
               case 0:
                 if (!req.session.user) {
-                  _context7.next = 3;
+                  _context7.next = 4;
                   break;
                 }
 
                 res.status(500).send(null);
+                res.end();
                 return _context7.abrupt("return");
 
-              case 3:
-                validUsername = (0, _JoiValidator.alphanumericUsername)(req.body.username).validated;
-                validEmail = (0, _JoiValidator.isEmail)(req.body.email).validated;
-                isValidPassword = (0, _JoiValidator.validPassword)(req.body.password);
+              case 4:
+                //Declare our variables
+                userEmail = req.body.email;
+                userUsername = req.body.username.toLowerCase();
+                userPassword = req.body.password; //Check if our user inputs are validated
+
+                validEmail = (0, _JoiValidator.isEmail)(userEmail).validated;
+                validUsername = (0, _JoiValidator.alphanumericUsername)(userUsername).validated;
+                isValidPassword = (0, _JoiValidator.validPassword)(userPassword).validated;
 
                 if (!(!validUsername || !validEmail || !isValidPassword)) {
-                  _context7.next = 9;
+                  _context7.next = 14;
                   break;
                 }
 
                 res.status(500).send(null);
+                res.end();
                 return _context7.abrupt("return");
 
-              case 9:
-                try {
-                  createUser = db.models.user.create({
-                    username: req.body.username.toLowerCase(),
-                    email: req.body.email,
-                    password: req.body.password,
-                    role: 1
-                  });
-                  res.send(true);
-                  res.end();
-                } catch (e) {
-                  console.error(e);
-                  res.status(500).send(null);
-                  res.end();
+              case 14:
+                _context7.next = 16;
+                return _regenerator["default"].awrap(_bcryptjs["default"].genSalt(10));
+
+              case 16:
+                bcryptSalt = _context7.sent;
+                _context7.next = 19;
+                return _regenerator["default"].awrap(_bcryptjs["default"].hash(userPassword, bcryptSalt));
+
+              case 19:
+                userHashedPassword = _context7.sent;
+                _context7.prev = 20;
+                _context7.next = 23;
+                return _regenerator["default"].awrap(db.models.user.create({
+                  email: userEmail,
+                  username: userUsername,
+                  password: userHashedPassword,
+                  role: 1
+                }));
+
+              case 23:
+                createUser = _context7.sent;
+                console.log(createUser);
+                res.send({
+                  error: false,
+                  message: true
+                });
+                res.end();
+                return _context7.abrupt("return");
+
+              case 30:
+                _context7.prev = 30;
+                _context7.t0 = _context7["catch"](20);
+                console.error(_context7.t0);
+
+                if (!(_context7.t0.parent.errno === 1062)) {
+                  _context7.next = 38;
+                  break;
                 }
 
-              case 10:
+                errorPath = _context7.t0.errors[0].path.charAt(0).toUpperCase() + _context7.t0.errors[0].path.slice(1);
+                res.send({
+                  error: true,
+                  message: ["".concat(errorPath, " already exist.")]
+                });
+                res.end();
+                return _context7.abrupt("return");
+
+              case 38:
+                res.status(500).send(null);
+                res.end();
+                return _context7.abrupt("return");
+
+              case 41:
               case "end":
                 return _context7.stop();
             }
           }
-        });
+        }, null, null, [[20, 30]]);
       }); //Need to perform validation on the backend.
 
       app.post("/forum/account/changepassword", function _callee8(req, res) {
@@ -522,7 +580,7 @@ function () {
         });
       });
       app.post("/account/delete", function _callee9(req, res) {
-        var isPasswordValid, findUser, userDBPassword, checkPassword;
+        var isPasswordValid, findUser, userDBPassword, checkPassword, didUserGetRemoved;
         return _regenerator["default"].async(function _callee9$(_context9) {
           while (1) {
             switch (_context9.prev = _context9.next) {
@@ -568,7 +626,7 @@ function () {
                 checkPassword = _context9.sent;
 
                 if (!checkPassword) {
-                  _context9.next = 29;
+                  _context9.next = 36;
                   break;
                 }
 
@@ -581,43 +639,63 @@ function () {
                 }));
 
               case 21:
-                _context9.next = 23;
-                return _regenerator["default"].awrap(req.session.destroy());
+                didUserGetRemoved = _context9.sent;
 
-              case 23:
-                _context9.next = 25;
-                return _regenerator["default"].awrap(store.destroy(req.sessionID));
+                if (!(didUserGetRemoved === 0)) {
+                  _context9.next = 26;
+                  break;
+                }
 
-              case 25:
                 res.send({
-                  errors: false,
-                  messages: ["We have removed the user!"]
+                  error: true,
+                  message: ["Unable to remove user. Please try again later or Contact an Administrator."]
                 });
                 res.end();
+                return _context9.abrupt("return");
+
+              case 26:
+                ;
                 _context9.next = 29;
-                break;
+                return _regenerator["default"].awrap(req.session.destroy());
 
               case 29:
-                console.log(findUser);
-                res.send(findUser);
+                _context9.next = 31;
+                return _regenerator["default"].awrap(store.destroy(req.sessionID));
+
+              case 31:
+                res.send({
+                  error: false,
+                  message: ["We have removed the user!"]
+                });
                 res.end();
-                _context9.next = 40;
+                return _context9.abrupt("return");
+
+              case 36:
+                res.send({
+                  error: true,
+                  message: ["You have entered an invalid password."]
+                });
+                res.end();
+                return _context9.abrupt("return");
+
+              case 39:
+                _context9.next = 47;
                 break;
 
-              case 34:
-                _context9.prev = 34;
+              case 41:
+                _context9.prev = 41;
                 _context9.t0 = _context9["catch"](10);
                 console.error(_context9.t0);
                 res.status(500).send(null);
                 res.end();
                 return _context9.abrupt("return");
 
-              case 40:
+              case 47:
               case "end":
                 return _context9.stop();
             }
           }
-        }, null, null, [[10, 34]]);
+        }, null, null, [[10, 41]]);
       });
     }
   }]);

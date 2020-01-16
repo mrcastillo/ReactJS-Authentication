@@ -1,21 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useHistory } from "react-router-dom";
-import { validPassword, confirmPassword } from "../validators/Validator";
+import { validPassword, confirmPassword } from "../validators/JoiValidator";
 import { Link } from "react-router-dom";
 import _ from "lodash";
+import { SessionContext } from "../context/SessionContext";
+import { sessionStatus } from "../functions/sessionFunctions";
 import axios from "axios";
 axios.defaults.withCredentials = true;
 
 const RemoveAccount = () => {
+    const { dispatch } = useContext(SessionContext);
+    
     const history = useHistory();
     
     const [password, setPassword] = useState("");
     const [confirmedPassword, setConfirmedPassword] = useState("");
 
-    const [formErrors, setFormErrors] = useState({
-        errors: false,
+    const [formError, setFormErrors] = useState({
+        error: false,
         messages: []
     });
+
     const handlePasswordInput = (e) => {
         setPassword(e.target.value);
     };
@@ -24,45 +29,56 @@ const RemoveAccount = () => {
         setConfirmedPassword(e.target.value);
     };
 
-    const removeAccount = (e) => {
+    const removeAccount = async (e) => {
         e.preventDefault();
+        setFormErrors({error: false});
 
-        const passwordValidator = validPassword(password);
-        const confirmValidator = confirmPassword(password, confirmedPassword);
+        //Check if Password/confirmPassword is validated and return proper formErrors
+        const isPasswordValid = validPassword(password);
+        const isConfirmPasswordValid = confirmPassword(password, confirmedPassword);
 
-        if(!passwordValidator.validated || !confirmValidator.validated) {
-            
-            const allErrors = [
-                ...passwordValidator.errors,
-                ...confirmValidator.errors
-            ];
-
-            setFormErrors({
-                errors: true,
-                messages: allErrors
-            });
-            setPassword("");
-            setConfirmedPassword("");
+        if(!isPasswordValid.validated) {
+            setFormErrors({error: true, message: ["Password has incorrect or has invalid input."]});
+            setPassword(""); setConfirmedPassword("");
+            return;
+        } else if(isPasswordValid.validated && !isConfirmPasswordValid.validated) {
+            setFormErrors({error: true, message: [isConfirmPasswordValid.error]});
+            setPassword(""); setConfirmedPassword("");
+            return;
         }
-        else {
-            axios.post("http://localhost:8080/account/delete", {
-                password
-            })
-            .then((serverReply) => {
-                console.log(serverReply);
-            })
-            .catch((err) =>  {
-                console.error(err);
-            })
-        }
+
+        //Make request to remove 
+        let deleteUserRequest = await axios.post("http://localhost:8080/account/delete", {
+            password
+        });
+        //Get payload from request 
+        deleteUserRequest = deleteUserRequest.data;
+        
+        //Check if returned null or error
+        if(deleteUserRequest.error || deleteUserRequest === null) {
+            const error = !deleteUserRequest ? ["Internal Server Error."] : deleteUserRequest.message
+            setFormErrors({error: true, message: [deleteUserRequest.message]});
+            setPassword(""); setConfirmedPassword("");
+            return;
+        };
+
+        //Check if the DB function returned false ( not removed )
+        if(deleteUserRequest === false) {
+            setFormErrors({error: true, message: ["Error. User not removed! Please try again or contact an admin."]});
+            setPassword(""); setConfirmedPassword("");
+            return;
+        };
+
+        sessionStatus(dispatch);
+        history.push("/");
     };
 
     //Form Errors
     function FormErrorsElement() {
         const formErrorsElement = [];
 
-        if(formErrors.errors) {
-            _.each(formErrors.messages, (message, key) => {
+        if(formError.error) {
+            _.each(formError.message, (message, key) => {
                 formErrorsElement.push(
                     <div className={"form-error"} key={key}>
                         {message}

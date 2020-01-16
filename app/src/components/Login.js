@@ -11,9 +11,9 @@ const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const [formErrors, setFormErrors] = useState({
-        errors: false,
-        messages: []
+    const [formError, setFormErrors] = useState({
+        error: false,
+        message: []
     })
 
     const handleEmailInput = (e) => {
@@ -24,67 +24,58 @@ const Login = () => {
         setPassword(e.target.value);
     }
 
-    const AxiosRequest = () => {
-        axios.post("http://localhost:8080/forum/login", {
-            email, password
-        })
-        .then((loginReplyAxios) => {
-            const loginReply = loginReplyAxios.data;
-
-            //Check if server returned  errors
-            if(loginReply.errors) {
-                setFormErrors({
-                    errors: true,
-                    messages: loginReply.errors
-                });
-                setPassword("");
-            }
-            else {
-                dispatch({
-                    type: "SESSION_SET",
-                    loginSession: loginReply
-                });
-                history.push("/account")
-            };
-        })
-        .catch((error) => {
-            setPassword("");
-            setFormErrors({
-                errors: true,
-                messages: ["There was an internal server error. Please try again later."]
-            });
-            
-        })
-    }
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-
+        
         const emailLengthValid = email.length > 0 ? true : false;
         const passwordLengthValid = password.length > 0 ? true : false;
 
         if(!emailLengthValid) {
-            var errorMsgs = ["Please enter an Email."];
             setFormErrors({
-                errors: true,
-                messages: errorMsgs
+                error: true,
+                message: ["Please enter an Email."]
             })
+            return;
         } else if (emailLengthValid && !passwordLengthValid) {
-            var errorMsgs = ["Please enter a Password"];
             setFormErrors({
-                errors: true,
-                messages: errorMsgs
+                error: true,
+                message: ["Please enter a Password"]
             })
-        } else {
-            AxiosRequest();
+            return;
+        } 
+
+        try {
+            let loginRequest = await axios.post("http://localhost:8080/forum/login", {email, password});
+            loginRequest = loginRequest.data;
+
+            if(!loginRequest.error) { //Successful Login
+                dispatch({
+                    type: "SESSION_SET",
+                    loginSession: loginRequest 
+                });
+                history.push("/account");
+            } else {
+                setFormErrors({
+                    error: true,
+                    message: loginRequest.error
+                });
+                setPassword("");
+            }
+        } catch (e) {
+            setFormErrors({
+                error: true,
+                message: ["There was an error when attempting to login. Please try again later."]
+            })
+            return;
         }
     }
-
+    
     //Form Errors
     function FormErrorsElement() {
         const formErrorsElement = [];
 
-        if(formErrors.errors) {
-            _.each(formErrors.messages, (message, key) => {
+        if(formError.error) {
+            _.each(formError.message, (message, key) => {
                 formErrorsElement.push(
                     <div className={"form-error"} key={key}>
                         {message}
