@@ -1,8 +1,14 @@
+/*
+    Rendered for URL/forum/:category
+*/
 import React, { useState, useEffect } from "react";
 import { Link, Switch, Route } from "react-router-dom";
 import AuthRedirect from "./AuthRedirect";
 import axios from "axios";
 import _ from "lodash";
+
+import bullet from "../images/bullet.png";
+import mushroom from "../images/mushroom.png";
 
 //Components
 import ForumPost from "./ForumPost";
@@ -42,14 +48,14 @@ const ForumThreads = (props) => {
 
             _.each(threads, (thread, key) => { //Each thread
                 threadsHTML.push( //Push threadsHTML element
-                    <tr key={key}>
-                        <td>
+                    <div className={"forum-threads-body-row"} key={key}>
+                        <p className={"forum-threads-body-row-item"} id={"thread-title"}>
                             <Link to={`${URL}/${thread.id}`}>{thread.threadTitle}</Link>
-                        </td>
-                        <td>2</td>
-                        <td>{thread.user.email}</td>
-                        <td>{thread.createdAt}</td>
-                    </tr>
+                        </p>
+                        <p className={"forum-threads-body-row-item"} id={"thread-poster"}>{thread.user ? thread.user.username : "Deleted User"}</p>
+                        <p className={"forum-threads-body-row-item"} id={"thread-replies"}>2</p>
+                        <p className={"forum-threads-body-row-item"} id={"thread-createAt"}>{thread.createdAt}</p>
+                    </div>
                 );
             });
             return (
@@ -69,28 +75,43 @@ const ForumThreads = (props) => {
 
     const ForumThreadsRoot = (props) => {
         return(
-            <div className={"forum"}>
-                <h1><Link to={"/forum"}>Back to forum</Link></h1>
-                <h1>{subject}</h1>
-                <table>
-                    <thead>
-                        <tr>
-                            <td>-</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td><Link to={`${URL}/post/newthread`}>New Thread</Link></td>
-                        </tr>
-                        <tr>
-                            <td>Subject</td>
-                            <td>Replies</td>
-                            <td>User</td>
-                            <td>Created At</td>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <div className={"forum-threads"}>
+                <h1 id={"forum-threads-subject-name"}>{subject}</h1>
+                <p>Introduce yourself</p>
+                <ul>
+                    <li>Read Forum Rules - <span>Forum Rules</span></li>
+                    <li>
+                        Accounts can be removed at any moment.
+                    </li>
+                </ul>
+
+                <div className={"action-select"}>
+                    <Link to={"/forum"} id={"site-button-2"}>
+                        <img src={bullet} width={35} height={25}/>
+                        <p>Back</p>
+                    </Link>
+                    <Link to={"/post/newthread"} id={"site-button-2"}>
+                        <img src={mushroom} width={25} height={25}/>
+                        <p>New Thread</p>
+                    </Link>
+                </div>
+                
+                
+                
+                <div className={"forum-threads-box"}>
+                    <div className={"forum-threads-header"}>
+                        <div className={"forum-threads-header-row"}>
+                            <p className={"forum-threads-header-row-item"}>Subject</p>
+                            <p className={"forum-threads-header-row-item"}>User</p>
+                            <p className={"forum-threads-header-row-item"} id={"forum-threads-replies"}>Replies</p>
+                            <p className={"forum-threads-header-row-item"}>Created At</p>
+                        </div>
+                    </div>
+
+                    <div className={"forum-threads-body"}>
                         <ForumThreads />
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             </div>
         )
     }
@@ -102,14 +123,14 @@ const ForumThreads = (props) => {
     }
 
     return ( 
-        <div>
+        <React.Fragment>
             <Switch>
                 <Route exact path={`${URL}/post/newthread`} render={(props) => <AuthRedirect><CreateThread props={props} category={category} /></AuthRedirect>}/>
                 <Route path={`${URL}/:threadId`} render={(props) => <ForumPost props={props} category={category} />} />
                 <Route exact path={`${URL}`} render={(props) => <ForumThreadsRoot {...props}/>}/>
                 <Route component={NoMatch} />
             </Switch>
-        </div>
+        </React.Fragment>
     );
 }
  

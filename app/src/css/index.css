@@ -1,103 +1,289 @@
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400;500;600;700&display=swap");
 body {
-  background: #ffe2ad;
+  background: #E0E1E9;
   margin: 0;
   padding: 0;
-  font-family: "helvetica"; }
+  font-family: 'Oswald', sans-serif; }
 
 a {
   color: inherit; }
 
-.app-container {
-  /*
-    .forum {
-        display: flex;
-        margin: 0em 5em 0em 5em;
-        //flex-flow: row wrap;
-        //justify-content: center;
-        //padding: 0em .5em 0em .5em;
-        
-        table {
-            border:1px solid black;
-            text-align: center;
-            flex: 1;
-            
-            thead {
-                font-weight: 600;
-                
-                tr {
-                    border-bottom: 1px solid black;
-                }
-            }
-        }
-    }
-    */ }
-  .app-container .navbar {
+.action-select {
+  display: flex;
+  flex-flow: row;
+  white-space: nowrap; }
+  .action-select #site-button-1 {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    color: black;
+    background: #121420;
+    padding: 1em;
+    border-radius: 8px;
+    width: 125px;
+    margin-right: 1em; }
+    .action-select #site-button-1 a {
+      text-decoration: none; }
+    .action-select #site-button-1 p {
+      padding: 0;
+      margin: 0;
+      font-weight: 800;
+      font-size: 20px;
+      color: white; }
+  .action-select #site-button-2 {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    color: black;
+    background: #121420;
+    border-radius: 8px;
+    margin-right: 1em;
+    padding: .3em 1em; }
+    .action-select #site-button-2 a {
+      text-decoration: none; }
+    .action-select #site-button-2 p {
+      padding: 0 .5em;
+      margin: 0;
+      font-weight: 800;
+      font-size: 20px;
+      color: white; }
+
+.app-container .navbar {
+  display: flex;
+  flex-flow: row wrap;
+  color: white;
+  background: #121420;
+  padding: .5em 1em; }
+  .app-container .navbar .brand {
+    display: flex;
+    flex-flow: row;
+    color: white;
+    flex-basis: 60%;
+    align-self: center; }
+    .app-container .navbar .brand img {
+      margin-right: .5em;
+      align-self: center; }
+    .app-container .navbar .brand h3 {
+      align-self: center;
+      margin: 0em; }
+  .app-container .navbar .nav-options {
     display: flex;
     flex-flow: row wrap;
+    justify-content: flex-end;
+    align-items: center;
+    flex: 1;
+    font-size: 16px;
+    font-weight: 600; }
+    .app-container .navbar .nav-options div {
+      padding: .5em; }
+
+.app-container .homepage {
+  padding: 1em; }
+  .app-container .homepage #homepage-welcome {
+    padding: 0em;
+    margin: 0em; }
+  .app-container .homepage p {
+    margin: 0; }
+  .app-container .homepage ul span {
     color: white;
-    background: black; }
-    .app-container .navbar .brand {
-      color: gold;
-      flex-basis: 75%; }
-    .app-container .navbar .nav-options {
-      display: flex;
-      flex-flow: row wrap;
-      justify-content: space-around;
-      align-items: center;
-      flex: 1;
-      font-size: 24px;
-      font-weight: 600; }
-  .app-container .login {
-    text-align: center; }
-    .app-container .login div form label {
-      display: block; }
-    .app-container .login div form input {
-      margin: 1em 0em 1em 0em; }
-    .app-container .login div form #email {
-      border: 1px solid red; }
-    .app-container .login div form #email:focus {
-      border: 5px solid purple; }
-  .app-container .signup-page {
-    text-align: center; }
-    .app-container .signup-page div form label {
-      display: block;
-      font-weight: 900; }
-    .app-container .signup-page div form input {
-      margin: 1em 0em .5em 0em;
-      border: 1px solid black;
-      outline: none; }
-    .app-container .signup-page div form .input-valid {
-      border: 1px solid green; }
-    .app-container .signup-page div form .input-pending {
-      border: 1px solid black; }
-    .app-container .signup-page div form .input-invalid {
-      border: 1px solid red; }
-    .app-container .signup-page div form .input-invalid:focus {
-      border: 1px solid red;
-      outline: none; }
-  .app-container .input-valid {
-    border: 2px solid green; }
-  .app-container .input-pending {
-    border: 1px solid black; }
-  .app-container .input-invalid {
+    background: #121420;
+    padding: 0em .5em; }
+  .app-container .homepage .homepage-news h1 {
+    margin: 1em 0em 0em 0em; }
+
+.app-container .login {
+  text-align: center; }
+  .app-container .login div form label {
+    display: block; }
+  .app-container .login div form input {
+    margin: 1em 0em 1em 0em; }
+  .app-container .login div form #email {
     border: 1px solid red; }
-  .app-container .input-invalid:focus {
+  .app-container .login div form #email:focus {
+    border: 5px solid purple; }
+
+.app-container .signup-page {
+  text-align: center; }
+  .app-container .signup-page div form label {
+    display: block;
+    font-weight: 900; }
+  .app-container .signup-page div form input {
+    margin: 1em 0em .5em 0em;
+    border: 1px solid black;
+    outline: none; }
+  .app-container .signup-page div form .input-valid {
+    border: 1px solid green; }
+  .app-container .signup-page div form .input-pending {
+    border: 1px solid black; }
+  .app-container .signup-page div form .input-invalid {
+    border: 1px solid red; }
+  .app-container .signup-page div form .input-invalid:focus {
     border: 1px solid red;
     outline: none; }
-  .app-container .form-errors {
-    color: red; }
-  .app-container .account .change-password {
-    text-align: center; }
-    .app-container .account .change-password .password-settings-form label {
-      display: block; }
-  .app-container .account .remove-account {
-    text-align: center; }
-    .app-container .account .remove-account .remove-account-form {
+
+.app-container .input-valid {
+  border: 2px solid green; }
+
+.app-container .input-pending {
+  border: 1px solid black; }
+
+.app-container .input-invalid {
+  border: 1px solid red; }
+
+.app-container .input-invalid:focus {
+  border: 1px solid red;
+  outline: none; }
+
+.app-container .form-errors {
+  color: red; }
+
+.app-container .account .change-password {
+  text-align: center; }
+  .app-container .account .change-password .password-settings-form label {
+    display: block; }
+
+.app-container .account .remove-account {
+  text-align: center; }
+  .app-container .account .remove-account .remove-account-form {
+    display: flex;
+    flex-flow: column;
+    align-items: center; }
+    .app-container .account .remove-account .remove-account-form form {
       display: flex;
       flex-flow: column;
+      justify-content: center;
       align-items: center; }
-      .app-container .account .remove-account .remove-account-form form {
+
+.app-container .forum-container {
+  padding: 1em; }
+  .app-container .forum-container .forum {
+    display: flex;
+    flex-flow: column; }
+    .app-container .forum-container .forum #forum-h1 {
+      margin: 0; }
+    .app-container .forum-container .forum #forum-p {
+      margin: 0; }
+    .app-container .forum-container .forum ul span {
+      color: white;
+      background: #121420;
+      padding: 0em .5em; }
+    .app-container .forum-container .forum .forum-category {
+      display: flex;
+      flex-flow: column; }
+      .app-container .forum-container .forum .forum-category p {
+        white-space: nowrap; }
+      .app-container .forum-container .forum .forum-category .forum-category-header .forum-category-header-row {
+        display: flex;
+        flex-flow: row;
+        color: black;
+        border-radius: 8px;
+        padding: 0em 1em;
+        font-weight: 800; }
+        .app-container .forum-container .forum .forum-category .forum-category-header .forum-category-header-row .forum-category-header-row-item {
+          display: flex;
+          flex-flow: row;
+          flex: 1; }
+        .app-container .forum-container .forum .forum-category .forum-category-header .forum-category-header-row .forum-category-header-row-item:nth-child(1) {
+          flex: 20%; }
+        .app-container .forum-container .forum .forum-category .forum-category-header .forum-category-header-row .forum-category-header-row-item:nth-child(2) {
+          flex: 40%; }
+      .app-container .forum-container .forum .forum-category .forum-category-body .forum-category-body-row {
+        display: flex;
+        flex-flow: row;
+        color: black;
+        padding: 0em 1em;
+        font-weight: 400;
+        align-items: center; }
+        .app-container .forum-container .forum .forum-category .forum-category-body .forum-category-body-row .forum-category-body-row-box {
+          display: flex;
+          flex-flow: row;
+          flex: 1; }
+          .app-container .forum-container .forum .forum-category .forum-category-body .forum-category-body-row .forum-category-body-row-box p {
+            display: flex;
+            flex-flow: row;
+            align-items: center; }
+        .app-container .forum-container .forum .forum-category .forum-category-body .forum-category-body-row .forum-category-body-row-box:nth-child(1) {
+          flex: 20%; }
+        .app-container .forum-container .forum .forum-category .forum-category-body .forum-category-body-row .forum-category-body-row-box:nth-child(2) {
+          flex: 40%; }
+      .app-container .forum-container .forum .forum-category .forum-category-body .forum-category-body-row:nth-child(odd) {
+        background: #F2F4F8; }
+      .app-container .forum-container .forum .forum-category .forum-category-body .forum-category-body-row:nth-child(even) {
+        background: white; }
+  .app-container .forum-container .forum-threads {
+    display: flex;
+    flex-flow: column; }
+    .app-container .forum-container .forum-threads > p {
+      margin: 0; }
+    .app-container .forum-container .forum-threads #forum-threads-subject-name {
+      margin: 0;
+      padding: 0; }
+    .app-container .forum-container .forum-threads .forum-threads-box .forum-threads-header .forum-threads-header-row {
+      display: flex;
+      flex-flow: row;
+      color: black;
+      border-radius: 8px;
+      padding: 0em 1em;
+      font-weight: 800; }
+      .app-container .forum-container .forum-threads .forum-threads-box .forum-threads-header .forum-threads-header-row .forum-threads-header-row-item {
+        flex: 1; }
+    .app-container .forum-container .forum-threads .forum-threads-body .forum-threads-body-row {
+      display: flex;
+      flex-flow: row;
+      padding: 0em 1em;
+      align-items: center;
+      font-weight: 400; }
+      .app-container .forum-container .forum-threads .forum-threads-body .forum-threads-body-row .forum-threads-body-row-item {
+        flex: 1; }
+    .app-container .forum-container .forum-threads .forum-threads-body .forum-threads-body-row:nth-child(odd) {
+      background: #F2F4F8; }
+    .app-container .forum-container .forum-threads .forum-threads-body .forum-threads-body-row:nth-child(even) {
+      background: white; }
+  .app-container .forum-container .forum-post-container {
+    display: flex;
+    flex-flow: column; }
+    .app-container .forum-container .forum-post-container .forum-navigation p {
+      margin: 0; }
+    .app-container .forum-container .forum-post-container .forum-navigation #thread-title {
+      font-weight: 900;
+      margin: 0; }
+    .app-container .forum-container .forum-post-container .forum-post {
+      display: flex;
+      flex-flow: row;
+      align-items: stretch;
+      margin-bottom: 1em; }
+      .app-container .forum-container .forum-post-container .forum-post * {
+        margin: 0; }
+      .app-container .forum-container .forum-post-container .forum-post .forum-poster-avatar {
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+        background: #121420;
+        color: white;
+        width: 200px;
+        height: 150px;
+        font-weight: 600;
+        padding: .5em;
+        border-radius: 12px; }
+        .app-container .forum-container .forum-post-container .forum-post .forum-poster-avatar .avatar-info {
+          display: flex;
+          flex-flow: row;
+          align-items: center;
+          width: 100%; }
+          .app-container .forum-container .forum-post-container .forum-post .forum-poster-avatar .avatar-info p {
+            font-size: 12px;
+            flex: 1;
+            text-align: center; }
+        .app-container .forum-container .forum-post-container .forum-post .forum-poster-avatar img {
+          width: 75px;
+          height: 75px;
+          border-radius: 50%;
+          object-fit: cover; }
+      .app-container .forum-container .forum-post-container .forum-post .forum-post-comment {
         display: flex;
         flex-flow: column;
         justify-content: center;
-        align-items: center; }
+        margin-left: 1em;
+        padding: 0em 1em;
+        background: #A0A3BB;
+        border-radius: 12px; }
