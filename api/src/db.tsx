@@ -2,11 +2,11 @@ import { Sequelize, DataTypes } from "sequelize";
 
 const sequelize = new Sequelize(
     "playground", //database
-    "playground_user", //username
-    "cantuna" //password
+    "forumAdmin", //username
+    "846043" //password
 , {
     operatorsAliases: Sequelize.Op,
-    host: "207.246.84.96",
+    host: "localhost",
     dialect: "mysql",
     pool: {
         max: 5,
