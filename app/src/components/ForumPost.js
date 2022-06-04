@@ -5,12 +5,21 @@ import axios from "axios";
 
 import NewPost from "./NewPost";
 
+import bullet from "../images/bullet.png";
+import mushroom from "../images/mushroom.png";
+import wario from "../images/elonwario.jpg";
+
 const ForumPost = (props) => {
+    console.log("Hey", props)
     const [posts, setPosts] = useState([]); //Post array  to store our posts
     const categoryId = props.category.id;
     const threadId = props.props.match.params.threadId;
-    var subject = props.category.subject;
 
+    const subject = props.category.subject;
+    var subjectFormatted = props.category.subject;
+    subjectFormatted = subjectFormatted.replace(/\s+/g, '');
+    subjectFormatted = subjectFormatted.toLowerCase();
+    
     //Get the URL used for our Route Rendering for forum posts
     const URL = props.props.match.url;
 
@@ -36,25 +45,50 @@ const ForumPost = (props) => {
             const replies = posts.forumPosts;
             const repliesElement = [];
 
-            _.each(replies, (reply) => {
+            _.each(replies, (reply, key) => {
                 repliesElement.push(
-                    <div>
-                        <p>Poster: {reply.user.email}</p>
-                        <p>{reply.postComment}</p>
+                    <div className={"forum-post"}>                    
+                        <div className={"forum-poster-avatar"}>
+                            <p id={"op-name"}>{reply.user.username}</p>
+                            <img src={wario} />
+                            <div className={"avatar-op-info"}>
+                                <p>New User</p>
+                                <p>Posts 100</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <p className={"forum-post-comment"}>
+                                {posts.originalComment}
+                            </p>
+                        </div>
+                        
                     </div>
                 )
             });
 
             return (
-                <div>
-                    <div>
-                        <p>Poster: {posts.originalPoster}</p>
-                        <h1>{posts.threadTitle}</h1>
-                        <p>{posts.originalComment}</p>
+                <React.Fragment>
+                    <div className={"forum-post"}>
+                        <div className={"forum-poster-avatar"}>
+                            <p id={"op-name"}>{posts.originalPoster}</p>
+                            <img src={wario} />
+                            <div className={"avatar-op-info"}>
+                                <p>New User</p>
+                                <p>Posts 100</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <p className={"forum-post-comment"} id={"original-comment"}>
+                                {posts.originalComment}
+                            </p>
+                        </div>
+                        
                     </div>
 
                     {repliesElement}        
-                </div>
+                </React.Fragment>
             )            
         }
         else {
@@ -65,11 +99,24 @@ const ForumPost = (props) => {
     };
 
     return ( 
-        <div>
-            <h1><Link to={`/forum/${trimLowerCase(subject)}`}>Back</Link></h1>
-            <hr />
-            <Link to={`/forum/${trimLowerCase(subject)}/${threadId}/post`}>New Post</Link>
-            
+        <div className={"forum-post-container"}>
+            <div className={"forum-navigation"}>
+                <p>Gamer's Lounge Navi</p>
+                <h1 id={"thread-title"}><Link to={"/forum"}>Forum</Link> - <Link to={`/forum/${subjectFormatted}`}> {subject} </Link> - {posts.threadTitle}</h1>
+            </div>
+            <br/>
+            <div className={"action-select"}>
+                <Link to={"/forum"} id={"site-button-2"}>
+                        <img src={bullet} width={35} height={25}/>
+                        <p>Back</p>
+                </Link>
+                <Link to={`/forum/${subjectFormatted}/${threadId}/post`} id={"site-button-2"}>
+                    <img src={mushroom} width={25} height={25} />
+                    <p>Post Message</p>
+                </Link>
+            </div>
+
+            <br/>
             <Route path={`${URL}`} render={(props) => <PostElement />} />
             <Route path={`${URL}/post`} component={(props) => <NewPost URL={URL} threadId={threadId}/>} />
         </div>
@@ -77,5 +124,3 @@ const ForumPost = (props) => {
 }
  
 export default ForumPost;
-
-//<Link to={`/forum/${trimLowerCase(subject)}/${threadId}/post`}>New Post</Link>

@@ -4,7 +4,7 @@ import redis from "redis";
 import session from "express-session";
 import connectRedis from 'connect-redis';
 const RedisStore = connectRedis(session);
-import helmet from "helmet";
+//import helmet from "helmet";
 import uuid from "uuid/v4";
 import morgan from "morgan";
 import bodyParser from "body-parser";
@@ -34,7 +34,7 @@ const app = express();
 app.server = http.createServer(app);
 
 //Used to protect our headers, prevent MITM, XSS, enable HTTPs only
-app.use(helmet());
+//app.use(helmet());
 
 app.use(cors({
     credentials: true,
@@ -107,6 +107,6 @@ connect((connection) => {
     app.server.listen(process.env.PORT || PORT, function () {
         console.log("App is running on port " + app.server.address().port, + process.env.PORT);
         console.log(`Database has started`);
-        console.log(`Redis Connected: ${redisClient.connected}`)
+        console.log(`Redis Connected: ${redisClient.connected}`);
     });
 });

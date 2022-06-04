@@ -15,6 +15,7 @@ class Forum extends React.Component {
         this.state = {
             forumCategories: []
         }
+        console.log("Props for forums.js", props)
     };
 
     componentDidMount() {
@@ -52,7 +53,7 @@ class Forum extends React.Component {
         }
 
         return(
-            <div className={"forum"}>
+            <div className={"forum-container"}>
                <Switch>
                     <Route exact path={`${URL}`} 
                         render={(props) => 
