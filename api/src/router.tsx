@@ -28,6 +28,19 @@ class AppRouter {
         const store = app.get("redisStore");
         //const uploader = app.get("uploader");
 
+        app.get("/", async (req, res) => {
+            try {
+                const createSubject = await db.models.forumSubjects.create({
+                    subject: "Introduction",
+                    description: "Welcome to the forum! Introduce yourself to everyone here."
+                });
+                res.send(createSubject); res.end();
+            } catch (e) {
+                console.error(e);
+                res.status(500).send(null);
+            }
+        });
+
         //Checks the user session and returns the session
         app.get("/forum/session", (req, res) => {
             const userSession: sessionInterface = {
@@ -41,7 +54,6 @@ class AppRouter {
         app.get("/forum", async (req, res) => {
             try {
                 const categories = await db.models.forumSubjects.findAll();
-    
                 res.send(categories); res.end();
             } catch (e) {
                 res.status(500).send(null); res.end();

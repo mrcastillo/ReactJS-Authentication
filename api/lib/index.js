@@ -60,14 +60,13 @@ app.use((0, _cors["default"])({
 })); //Create Redis Client
 
 var redisClient = _redis["default"].createClient({
-  host: '207.246.84.96',
-  port: 6379,
-  password: '5954f83a2ae3cea4be9f63c69c63945041b1b7fadacd1ad4faf46a51a3c0a923'
+  host: 'localhost',
+  port: 6379
 });
 
 var redisStore = new RedisStore({
-  client: redisClient //ttl: 60 * 5
-
+  client: redisClient,
+  ttl: 60 * 5
 });
 app.use((0, _expressSession["default"])({
   store: redisStore,

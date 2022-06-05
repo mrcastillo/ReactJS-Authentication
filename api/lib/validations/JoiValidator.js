@@ -5,7 +5,7 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.alphanumericUsername = exports.confirmPassword = exports.validPassword = exports.isEmail = exports.hasNonAlphanumeric = exports.hasLowercase = exports.hasUppercase = exports.hasNumeric = void 0;
+exports.validPassword = exports.isEmail = exports.hasUppercase = exports.hasNumeric = exports.hasNonAlphanumeric = exports.hasLowercase = exports.confirmPassword = exports.alphanumericUsername = void 0;
 
 var _joi = _interopRequireDefault(require("@hapi/joi"));
 

@@ -7,12 +7,12 @@ exports.connect = void 0;
 
 var _sequelize = require("sequelize");
 
-var sequelize = new _sequelize.Sequelize("playground", //database
-"playground_user", //username
-"cantuna" //password
+var sequelize = new _sequelize.Sequelize("forum", //database
+"forumAdmin", //username
+"846043Ant;" //password
 , {
   operatorsAliases: _sequelize.Sequelize.Op,
-  host: "207.246.84.96",
+  host: "localhost",
   dialect: "mysql",
   pool: {
     max: 5,

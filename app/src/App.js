@@ -12,8 +12,6 @@ import Logout from "./components/Logout";
 import Forum from "./components/Forum";
 //Providers
 
-
-
 class App extends Component {
   render(){
     return(
