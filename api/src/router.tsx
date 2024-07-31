@@ -25,8 +25,8 @@ class AppRouter {
         const app = this.app;
         const db = app.get("db");
         //const redis = app.get("redisClient");
-        const store = app.get("redisStore");
-        //const uploader = app.get("uploader");
+        //const store = app.get("redisStore");
+        const uploader = app.get("uploader");
 
         app.get("/", async (req, res) => {
             try {

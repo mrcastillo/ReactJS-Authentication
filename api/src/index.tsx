@@ -43,6 +43,7 @@ app.use(cors({
     //credentials: false
 }));
 
+/*
 //Create Redis Client
 const redisClient = redis.createClient({
     host: 'localhost',
@@ -54,6 +55,7 @@ const redisStore = new RedisStore({
     ttl: 60 * 5
 });
 
+
 app.use(
     session({
         store: redisStore,
@@ -61,6 +63,21 @@ app.use(
         secret: uuid(),
         saveUninitialized: false,
         resave: false,
+        cookie: {
+            //maxAge: 5 * 60 * 1000,
+            //expires: 15 * 60 * 1000,
+            secure: false,
+            sameSite: false,
+            httpOnly: true
+        }
+    })
+);
+*/
+app.use(
+    session({
+        secret: "keyboard cat",
+        resave: false,
+        saveUninitialized: true,
         cookie: {
             //maxAge: 5 * 60 * 1000,
             //expires: 15 * 60 * 1000,
@@ -93,19 +110,19 @@ app.set("storageDir", storageDir);
 
 connect((connection) => {
     //Sets the database in our application, we initialize our router with (app) so that we can acccess this.
-    //app.db = connection;
+    app.db = connection;
     app.set("db", connection);
-    app.set("redisClient", redisClient);
-    app.set("redisStore", redisStore);
+    //app.set("redisClient", redisClient);
+    //app.set("redisStore", redisStore);
     app.set("uploader", uploader);
     //init router
     new AppRouter(app);
 
-    redisClient.on('error', console.error)
+    //redisClient.on('error', console.error)
     
     app.server.listen(process.env.PORT || PORT, function () {
         console.log("App is running on port " + app.server.address().port, + process.env.PORT);
         console.log(`Database has started`);
-        console.log(`Redis Connected: ${redisClient.connected}`)
+        //console.log(`Redis Connected: ${redisClient.connected}`)
     });
 });

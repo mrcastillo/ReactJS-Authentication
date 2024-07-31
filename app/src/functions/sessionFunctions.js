@@ -13,6 +13,7 @@ Used in AuthRedirect to protect links from unauth access
 export const sessionStatus = async (dispatch) => {
     const serverSession = await axios("http://localhost:8080/forum/session");
     
+    console.log(serverSession, "SESSION HERE");
     dispatch({
         type: "SESSION_STATE",
         serverSession

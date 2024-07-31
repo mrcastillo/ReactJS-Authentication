@@ -35,9 +35,9 @@ var AppRouter = /*#__PURE__*/function () {
     value: function setupRouters() {
       var app = this.app;
       var db = app.get("db"); //const redis = app.get("redisClient");
+      //const store = app.get("redisStore");
 
-      var store = app.get("redisStore"); //const uploader = app.get("uploader");
-
+      var uploader = app.get("uploader");
       app.get("/", /*#__PURE__*/function () {
         var _ref = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee(req, res) {
           var createSubject;

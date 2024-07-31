@@ -6,15 +6,11 @@ var _http = _interopRequireDefault(require("http"));
 
 var _express = _interopRequireDefault(require("express"));
 
-var _redis = _interopRequireDefault(require("redis"));
-
 var _expressSession = _interopRequireDefault(require("express-session"));
 
 var _connectRedis = _interopRequireDefault(require("connect-redis"));
 
 var _helmet = _interopRequireDefault(require("helmet"));
-
-var _v = _interopRequireDefault(require("uuid/v4"));
 
 var _morgan = _interopRequireDefault(require("morgan"));
 
@@ -57,24 +53,42 @@ app.use((0, _cors["default"])({
   //exposedHeaders: "*",
   origin: "http://localhost:3000" //credentials: false
 
-})); //Create Redis Client
-
-var redisClient = _redis["default"].createClient({
-  host: 'localhost',
-  port: 6379
+}));
+/*
+//Create Redis Client
+const redisClient = redis.createClient({
+    host: 'localhost',
+    port: 6379
 });
 
-var redisStore = new RedisStore({
-  client: redisClient,
-  ttl: 60 * 5
+const redisStore = new RedisStore({ 
+    client: redisClient,
+    ttl: 60 * 5
 });
+
+
+app.use(
+    session({
+        store: redisStore,
+        name: "sessionID", //Avoid using default cookie names, and use generic cookienames instead so attackers can't guess the tech you are using and launch specified attacks.
+        secret: uuid(),
+        saveUninitialized: false,
+        resave: false,
+        cookie: {
+            //maxAge: 5 * 60 * 1000,
+            //expires: 15 * 60 * 1000,
+            secure: false,
+            sameSite: false,
+            httpOnly: true
+        }
+    })
+);
+*/
+
 app.use((0, _expressSession["default"])({
-  store: redisStore,
-  name: "sessionID",
-  //Avoid using default cookie names, and use generic cookienames instead so attackers can't guess the tech you are using and launch specified attacks.
-  secret: (0, _v["default"])(),
-  saveUninitialized: false,
+  secret: "keyboard cat",
   resave: false,
+  saveUninitialized: true,
   cookie: {
     //maxAge: 5 * 60 * 1000,
     //expires: 15 * 60 * 1000,
@@ -98,17 +112,16 @@ app.set("root", __dirname);
 app.set("storageDir", storageDir);
 (0, _db.connect)(function (connection) {
   //Sets the database in our application, we initialize our router with (app) so that we can acccess this.
-  //app.db = connection;
-  app.set("db", connection);
-  app.set("redisClient", redisClient);
-  app.set("redisStore", redisStore);
+  app.db = connection;
+  app.set("db", connection); //app.set("redisClient", redisClient);
+  //app.set("redisStore", redisStore);
+
   app.set("uploader", uploader); //init router
 
-  new _router["default"](app);
-  redisClient.on('error', console.error);
+  new _router["default"](app); //redisClient.on('error', console.error)
+
   app.server.listen(process.env.PORT || PORT, function () {
     console.log("App is running on port " + app.server.address().port, +process.env.PORT);
-    console.log("Database has started");
-    console.log("Redis Connected: ".concat(redisClient.connected));
+    console.log("Database has started"); //console.log(`Redis Connected: ${redisClient.connected}`)
   });
 });
