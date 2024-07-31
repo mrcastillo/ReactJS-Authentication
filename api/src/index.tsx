@@ -110,11 +110,11 @@ app.set("storageDir", storageDir);
 
 connect((connection) => {
     //Sets the database in our application, we initialize our router with (app) so that we can acccess this.
-    app.db = connection;
-    app.set("db", connection);
+    //app.db = connection;
+    //app.set("db", connection);
     //app.set("redisClient", redisClient);
     //app.set("redisStore", redisStore);
-    app.set("uploader", uploader);
+    //app.set("uploader", uploader);
     //init router
     new AppRouter(app);
 
@@ -122,7 +122,7 @@ connect((connection) => {
     
     app.server.listen(process.env.PORT || PORT, function () {
         console.log("App is running on port " + app.server.address().port, + process.env.PORT);
-        console.log(`Database has started`);
+        //console.log(`Database has started`);
         //console.log(`Redis Connected: ${redisClient.connected}`)
     });
 });
